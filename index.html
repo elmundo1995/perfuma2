@@ -1282,7 +1282,7 @@ db.ref('perfuma2_version_control').on('value', (snapshot) => {
   }
 });
 
-db.ref('perfuma2_data').on('value', (snapshot) => {
+db.ref('perfuma2_cloud').on('value', (snapshot) => {
   const data = snapshot.val();
   if (data) {
     inventario = safeArray(data.inventario);
@@ -1350,7 +1350,7 @@ db.ref('perfuma2_data').on('value', (snapshot) => {
 
 function guardarCambiosEnNube(esManual = false) {
   if (!nubeCargada || isCatalogoPublico) return;
-  db.ref('perfuma2_data').set({ 
+  db.ref('perfuma2_cloud').set({ 
       inventario, ventas, gastos, pedidos: pedidosWeb, tasaBCV, tasaUSDT, tipoTasaActiva, margenGlobalActual, numeroWhatsAppTienda, updatedAt: Date.now() 
   });
   if (esManual) { reproducirSonido('exito'); alert("✅ Guardado en la nube completado."); }
@@ -2426,7 +2426,7 @@ function enviarPedidoWeb() {
     const nom = document.getElementById('cat-cli-nombre').value.trim(), tel = document.getElementById('cat-cli-tel').value.trim();
     if(!nom || !tel) return alert("Faltan datos");
     const pedido = { id: 'web_'+Date.now(), fecha: new Date().toLocaleString(), cliente: nom, telefono: tel, items: [...carritoPublico], total: carritoPublico.reduce((s,i)=>s+i.subtotal,0), timestamp: Date.now() };
-    db.ref('perfuma2_data/pedidos').push(pedido).then(()=>{
+    db.ref('perfuma2_cloud/pedidos').push(pedido).then(()=>{
         alert("✅ Pedido enviado con éxito");
         carritoPublico = [];
         document.getElementById('modal-carrito-pub').style.display = 'none';
@@ -2453,17 +2453,17 @@ function facturarPedidoWeb(id) {
     document.getElementById('v-telefono').value = p.telefono;
     carritoDetal = p.items.map(i=>({ productoId: i.id, nombre: i.nombre, precio: i.precio, cantidad: i.cantidad, subtotal: i.subtotal }));
     renderCarrito('detal');
-    db.ref('perfuma2_data/pedidos').orderByChild('id').equalTo(id).once('value', snap => { snap.forEach(c => c.ref.remove()); });
+    db.ref('perfuma2_cloud/pedidos').orderByChild('id').equalTo(id).once('value', snap => { snap.forEach(c => c.ref.remove()); });
 }
 
 function eliminarPedidoIndividualWeb(id) {
     if(!confirm("¿Borrar este pedido?")) return;
-    db.ref('perfuma2_data/pedidos').orderByChild('id').equalTo(id).once('value', snap => { snap.forEach(c => c.ref.remove()); });
+    db.ref('perfuma2_cloud/pedidos').orderByChild('id').equalTo(id).once('value', snap => { snap.forEach(c => c.ref.remove()); });
 }
 
 function limpiarPedidosWeb() {
     if(!confirm("¿Borrar todos los pedidos del buzón?")) return;
-    db.ref('perfuma2_data/pedidos').remove().then(() => {
+    db.ref('perfuma2_cloud/pedidos').remove().then(() => {
         pedidosWeb = [];
         renderPedidosWeb();
         alert("✅ Buzón de pedidos limpiado.");
@@ -2474,7 +2474,7 @@ function guardarNumeroWA() {
     const num = document.getElementById('config-wa-tienda').value.replace(/\D/g, '');
     if(num.length < 10) return alert("Número inválido");
     numeroWhatsAppTienda = num;
-    db.ref('perfuma2_data/numeroWhatsAppTienda').set(num);
+    db.ref('perfuma2_cloud/numeroWhatsAppTienda').set(num);
     alert("✅ Número guardado");
 }
 
