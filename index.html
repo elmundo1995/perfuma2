@@ -1092,16 +1092,32 @@ function restaurarRespaldoJSON(inputElement) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const data = JSON.parse(e.target.result);
-            if (data.inventario || data.ventas) {
-                if (confirm("⚠️ ¿Estás seguro de restaurar esta copia? Reemplazará los datos actuales por los del archivo de respaldo.")) {
-                    inventario = safeArray(data.inventario);
-                    ventas = safeArray(data.ventas);
-                    gastos = safeArray(data.gastos);
-                    pedidosWeb = safeArray(data.pedidos);
-                    tasaBCV = data.tasaBCV || tasaBCV;
-                    tasaUSDT = data.tasaUSDT || tasaUSDT;
-                    margenGlobalActual = data.margenGlobalActual || margenGlobalActual;
+            let data = JSON.parse(e.target.result);
+        
+        // Desempaqueta si viene directo de Firebase Console
+        if (data.perfuma2_cloud && data.perfuma2_cloud.inventario) {
+          data = data.perfuma2_cloud;
+        } else if (data.perfuma2_respaldos) {
+          const claves = Object.keys(data.perfuma2_respaldos).sort();
+          const ultima = claves[claves.length - 1];
+          data = data.perfuma2_respaldos[ultima].datos || data.perfuma2_respaldos[ultima];
+        } else if (data.perfuma2_data && data.perfuma2_data.inventario) {
+          data = data.perfuma2_data;
+        } else if (data.datos) {
+          data = data.datos;
+        }
+
+        let invRecuperado = data.inventario || (Array.isArray(data) ? data : null);
+
+        if (invRecuperado || data.ventas) {
+          if (confirm("⚠️ ¿Estás seguro de restaurar esta copia? Reemplazará los datos actuales por los del archivo de respaldo.")) {
+            if (invRecuperado) inventario = safeArray(invRecuperado);
+            if (data.ventas) ventas = safeArray(data.ventas);
+            if (data.gastos) gastos = safeArray(data.gastos);
+            if (data.pedidos) pedidosWeb = safeArray(data.pedidos);
+            tasaBCV = data.tasaBCV || tasaBCV;
+            tasaUSDT = data.tasaUSDT || tasaUSDT;
+            margenGlobalActual = data.margenGlobalActual || margenGlobalActual;
                     guardarCambiosEnNube(false);
                     renderTodo();
                     reproducirSonido('exito');
