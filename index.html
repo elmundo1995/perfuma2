@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PERFUMA2 - Gestión de Perfumería</title>
+
+<!-- Configuración de Íconos y PWA -->
+<link rel="icon" type="image/jpeg" href="logo.jpg.jpg">
+<link rel="apple-touch-icon" href="logo.jpg.jpg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PERFUMA2">
+
+<!-- Librerías Externas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root { 
+    --bg-main: #070b14; 
+    --bg-card: #111a2e; 
+    --bg-input: #1a2642; 
+    --border-color: #223254; 
+    --accent: #00f2d6; 
+    --accent-hover: #00c7b0; 
+    --text-main: #f8fafc; 
+    --text-muted: #94a3b8; 
+    --danger: #ff4d6d; 
+    --warning: #ffb703; 
+    --success: #06d6a0; 
+    --info: #3a86ff; 
+    --purple: #9d4edd; 
+  }
+  
+  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body { margin: 0; padding: 16px; background: var(--bg-main); color: var(--text-main); font-size: 13px; }
+  
+  #version-badge-flotante {
+      position: fixed; bottom: 15px; right: 15px; background: rgba(0, 242, 214, 0.15);
+      border: 2px solid var(--accent); color: var(--accent); padding: 8px 16px;
+      border-radius: 30px; font-size: 11px; font-weight: 900; z-index: 999999;
+      cursor: pointer; pointer-events: auto; backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(0, 242, 214, 0.4), inset 0 0 10px rgba(0, 242, 214, 0.2);
+      animation: neonGlow 2s infinite alternate;
+  }
+  @keyframes neonGlow {
+      0% { box-shadow: 0 0 10px rgba(0, 242, 214, 0.3); }
+      100% { box-shadow: 0 0 25px rgba(0, 242, 214, 0.8), inset 0 0 12px rgba(0, 242, 214, 0.4); }
+  }
+
+  #loader-pantalla {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, #111a2e 0%, #070b14 100%); z-index: 9999999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: opacity 0.8s ease;
+  }
+  .loader-logo-container {
+      width: 150px; height: 150px; border-radius: 50%;
+      border: 4px solid var(--accent);
+      background: linear-gradient(135deg, #111a2e, #1a2642);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 40px rgba(0,242,214,0.6), inset 0 0 20px rgba(0,242,214,0.3);
+      animation: pulseLoader 1.5s infinite alternate;
+      overflow: hidden;
+  }
+  @keyframes pulseLoader {
+      0% { transform: scale(0.95); box-shadow: 0 0 20px rgba(0,242,214,0.3); }
+      100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(0,242,214,0.9); }
+  }
+  .loader-text-glow {
+      color: var(--accent); margin-top: 25px; font-weight: 900; letter-spacing: 3px; font-size: 26px;
+      text-shadow: 0 0 15px rgba(0,242,214,0.7);
+  }
+  .loader-spinner {
+      margin-top: 20px; width: 50px; height: 50px;
+      border: 5px solid var(--border-color); border-top: 5px solid var(--accent);
+      border-radius: 50%; animation: spin 1s linear infinite;
+      box-shadow: 0 0 15px rgba(0,242,214,0.5);
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 14px; border-bottom: 2px solid var(--border-color); margin-bottom: 18px; }
+  .brand-title { font-size: 26px; font-weight: 900; color: var(--accent); margin: 0; letter-spacing: 1.5px; text-shadow: 0 0 10px rgba(0,242,214,0.4); }
+  .brand-subtitle { font-size: 11px; color: var(--accent); font-weight: 800; text-shadow: 0 0 8px rgba(0,242,214,0.3); }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  
+  .tasa-box { background: var(--bg-card); border: 2px solid var(--border-color); padding: 6px 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  .tasa-box.activa { border-color: var(--accent); background: rgba(0,242,214,0.1); box-shadow: 0 0 20px rgba(0,242,214,0.3), inset 0 0 8px rgba(0,242,214,0.2); }
+  .tasa-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; display: block; }
+  .tasa-input { background: transparent; border: none; color: #fff; font-weight: 900; font-size: 15px; width: 75px; outline: none; cursor: text; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+  
+  button { cursor: pointer; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 800; font-size: 12px; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+  button:active { transform: scale(0.96); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #070b14; box-shadow: 0 4px 20px rgba(0,242,214,0.4); }
+  .btn-primary:hover { box-shadow: 0 6px 25px rgba(0,242,214,0.7); }
+  .btn-secondary { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); }
+  .btn-warning { background: linear-gradient(135deg, var(--warning), #e89b00); color: #070b14; }
+  .btn-danger { background: rgba(255,77,109,0.2); color: var(--danger); border: 1px solid rgba(255,77,109,0.4); }
+  .btn-wa { background: rgba(6,214,160,0.2); color: var(--success); border: 1px solid rgba(6,214,160,0.4); }
+  .btn-purple { background: linear-gradient(135deg, var(--purple), #7b2cbf); color: #fff; box-shadow: 0 4px 15px rgba(157,78,221,0.4); }
+  
+  .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .tab-btn { position: relative; background: var(--bg-card); color: var(--text-muted); border: 2px solid var(--border-color); padding: 12px 18px; border-radius: 12px; font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  .tab-btn.active { background: rgba(0,242,214,0.15); color: var(--accent); border-color: var(--accent); box-shadow: 0 0 20px rgba(0,242,214,0.4), inset 0 0 10px rgba(0,242,214,0.2); }
+  .tab-content { display: none; } .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  .badge-alerta { position: absolute; top: -8px; right: -8px; background: var(--danger); color: #fff; font-size: 10px; font-weight: 900; padding: 3px 7px; border-radius: 50px; border: 2px solid var(--bg-main); display: none; box-shadow: 0 0 15px var(--danger); animation: pulseBadge 1s infinite alternate; }
+  @keyframes pulseBadge { 0% { transform: scale(1); } 100% { transform: scale(1.2); } }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .kpi-card { background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 14px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.4); transition: transform 0.3s; }
+  .kpi-card:hover { transform: translateY(-3px); border-color: rgba(0,242,214,0.4); }
+  .kpi-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 900; margin-bottom: 8px; letter-spacing: 1px; }
+  .kpi-value { font-size: 28px; font-weight: 900; margin-bottom: 4px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+  .kpi-sub { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+  
+  .card-panel { background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+  .card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .card-title { font-size: 16px; font-weight: 900; margin: 0; color: var(--text-main); letter-spacing: 0.5px; }
+  
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 900; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .user-input { width: 100%; background: var(--bg-input); border: 2px solid var(--border-color); color: #fff; padding: 11px 14px; border-radius: 10px; font-size: 14px; outline: none; transition: all 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); }
+  .user-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0,242,214,0.3), inset 0 2px 5px rgba(0,0,0,0.3); }
+  
+  .table-responsive { overflow-x: auto; max-height: 550px; overflow-y: auto; border-radius: 10px; border: 2px solid var(--border-color); box-shadow: inset 0 4px 10px rgba(0,0,0,0.4); }
+  table { width: 100%; border-collapse: collapse; text-align: left; }
+  th { background: #070b14; color: var(--accent); font-size: 11px; text-transform: uppercase; font-weight: 900; padding: 14px 12px; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--border-color); letter-spacing: 0.5px; }
+  td { padding: 14px 12px; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: 600; }
+  tr:hover td { background: rgba(0,242,214,0.03); }
+  
+  .badge { padding: 5px 10px; border-radius: 20px; font-size: 10px; font-weight: 900; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-format { background: rgba(0,242,214,0.15); color: var(--accent); border: 1px solid rgba(0,242,214,0.4); }
+  .badge-decant { background: rgba(255,183,3,0.15); color: var(--warning); border: 1px solid rgba(255,183,3,0.4); }
+  
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7,11,20,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 16px; backdrop-filter: blur(8px); overflow-y: auto; }
+  .modal-box { position: relative; background: var(--bg-card); border: 2px solid var(--accent); border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(0,242,214,0.3); margin: auto; }
+  .btn-close-modal { position: absolute; top: 14px; right: 14px; background: transparent; border: none; color: var(--text-muted); font-size: 20px; padding: 6px 10px; cursor: pointer; font-weight: 900; }
+  .btn-close-modal:hover { color: var(--danger); text-shadow: 0 0 10px var(--danger); }
+  
+  .recibo-ticket { background: #ffffff; color: #1e293b; border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+  .carrito-caja { background: #070b14; border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 16px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); }
+  .carrito-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border-color); font-size: 13px; font-weight: 700; }
+  
+  /* Catálogo Público */
+  #app-catalogo { display: none; padding-bottom: 100px; }
+  .cat-hero { text-align: center; padding: 40px 16px 25px 16px; background: radial-gradient(circle, #111a2e 0%, var(--bg-main) 100%); border-bottom: 2px solid var(--border-color); }
+  .cat-logo { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent); box-shadow: 0 0 35px rgba(0,242,214,0.5); margin: 0 auto 15px auto; overflow: hidden; background: #1a2642; display: flex; align-items: center; justify-content: center; font-size: 35px; }
+  .cat-title-text { font-size: 32px; font-weight: 900; margin: 0; color: #fff; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,242,214,0.6); }
+  .cat-tasa-badge { background: rgba(0,242,214,0.15); border: 2px solid var(--accent); color: var(--accent); padding: 8px 16px; border-radius: 30px; font-size: 12px; font-weight: 900; display: inline-block; margin-top: 12px; box-shadow: 0 0 15px rgba(0,242,214,0.3); }
+  
+  .cat-filters { display: flex; gap: 12px; overflow-x: auto; padding: 15px 16px; margin-bottom: 10px; scrollbar-width: none; }
+  .cat-filters::-webkit-scrollbar { display: none; }
+  .cat-filter-btn { background: var(--bg-card); border: 2px solid var(--border-color); color: var(--text-muted); padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 800; white-space: nowrap; transition: 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .cat-filter-btn.active { background: var(--accent); color: #070b14; border-color: var(--accent); box-shadow: 0 0 25px rgba(0,242,214,0.6); font-weight: 900; }
+  
+  .cat-search-container { padding: 0 16px; margin-bottom: 24px; }
+  .cat-search-input { width: 100%; background: var(--bg-card); border: 2px solid var(--border-color); color: #fff; padding: 14px 18px; border-radius: 14px; font-size: 15px; outline: none; backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+  .cat-search-input:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,242,214,0.4); }
+  
+  .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 0 16px; }
+  @media(max-width: 1024px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+  
+  .cat-item { background: linear-gradient(135deg, rgba(17,26,46,0.9), rgba(26,38,66,0.9)); border: 2px solid var(--border-color); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; backdrop-filter: blur(12px); transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+  .cat-item:hover { transform: translateY(-4px); border-color: rgba(0,242,214,0.5); box-shadow: 0 12px 35px rgba(0,242,214,0.25); }
+  .cat-item-img { width: 100%; aspect-ratio: 1; background: linear-gradient(135deg, #1a2642, #070b14); border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; border: 1px solid var(--border-color); overflow: hidden; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); }
+  .cat-item-brand { font-size: 10px; color: var(--accent); text-transform: uppercase; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 5px rgba(0,242,214,0.3); }
+  .cat-item-name { font-size: 13px; font-weight: 900; color: #fff; margin: 6px 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 0 5px rgba(255,255,255,0.2); }
+  .cat-item-format { font-size: 11px; color: var(--warning); font-weight: 800; margin-bottom: 10px; }
+  .cat-item-price { font-size: 17px; font-weight: 900; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+  .cat-item-bs { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 14px; }
+  .cat-item-btn { width: 100%; background: linear-gradient(135deg, var(--border-color), #2d4270); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; transition: 0.3s; text-transform: uppercase; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .cat-item-btn.added { background: linear-gradient(135deg, var(--success), #04ad80); color: #070b14; box-shadow: 0 0 15px rgba(6,214,160,0.6); }
+  
+  .cat-cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(7,11,20,0.95); backdrop-filter: blur(15px); border-top: 2px solid var(--accent); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 -10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,242,214,0.2); cursor: pointer; }
+  .cat-cart-btn { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #070b14; padding: 14px 28px; border-radius: 30px; font-weight: 900; font-size: 15px; border: none; box-shadow: 0 4px 20px rgba(0,242,214,0.5); text-transform: uppercase; }
+  .cat-cart-total { color: #fff; font-size: 20px; font-weight: 900; text-shadow: 0 0 10px rgba(0,242,214,0.5); }
+  
+  .pub-cart-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+</style>
+</head>
+<body>
+
+<div id="version-badge-flotante" onclick="abrirModalActualizador()" style="cursor: pointer; pointer-events: auto;">🔔 v.95 oyamh95</div>
+
+<div id="loader-pantalla">
+    <div class="loader-logo-container">
+        <img src="logo.jpg.jpg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none';">
+    </div>
+    <h2 class="loader-text-glow">PERFUMA2</h2>
+    <p style="color:var(--text-muted); font-size:13px; font-weight:700; margin-top:5px;">Sincronizando Base de Datos 3D...</p>
+    <div class="loader-spinner"></div>
+</div>
+
+<div id="modal-login" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-main); z-index:99999; display:none; justify-content:center; align-items:center;">
+    <div class="modal-box" style="text-align:center;">
+        <div style="width: 110px; height: 110px; margin: 0 auto 20px auto; border-radius: 50%; border: 3px solid var(--accent); background: linear-gradient(135deg, #111a2e, #1a2642); display: flex; align-items: center; justify-content: center; font-size: 45px; box-shadow: 0 0 30px rgba(0,242,214,0.4); overflow: hidden;">
+            <img src="logo.jpg.jpg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; document.getElementById('login-logo-fallback').style.display='block';">
+            <div id="login-logo-fallback" style="display:none;">🔒</div>
+        </div>
+        <h2 style="color:var(--accent); margin-top:0; font-weight:900; text-shadow: 0 0 10px rgba(0,242,214,0.5);">Acceso Restringido</h2>
+        <p style="color:var(--text-muted); font-size:13px; font-weight:700; margin-bottom:20px;">Ingresa el PIN de seguridad.</p>
+        <input type="password" id="input-pin-acceso" class="user-input" style="font-size:26px; text-align:center; letter-spacing:10px; margin-bottom:20px; padding:14px;" placeholder="****" maxlength="4">
+        <button class="btn-primary" style="width:100%; padding:15px; font-size:15px;" onclick="verificarPIN()">Desbloquear Sistema</button>
+    </div>
+</div>
+
+<div id="app-catalogo">
+    <div class="cat-hero">
+        <div class="cat-logo">
+            <img src="logo.jpg.jpg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div style="display:none; color:var(--accent);">🧴</div>
+        </div>
+        <h1 class="cat-title-text">PERFUMA2</h1>
+        <div id="cat-tasa-display" class="cat-tasa-badge">Cargando Tasa...</div>
+    </div>
+    
+    <div class="cat-search-container">
+        <input type="text" id="cat-search" class="cat-search-input" placeholder="🔍 Buscar perfume, marca o notas..." oninput="renderCatalogoPublico()">
+    </div>
+    
+    <div class="cat-filters">
+        <button class="cat-filter-btn active" onclick="setCatFiltro('todo', this)">🔥 Todo</button>
+        <button class="cat-filter-btn" onclick="setCatFiltro('perfumes', this)">📦 Perfumes Sellados</button>
+        <button class="cat-filter-btn" onclick="setCatFiltro('decants', this)">🧪 Muestras/Decants</button>
+        <button class="cat-filter-btn" onclick="setCatFiltro('combos', this)">🎁 Combos</button>
+    </div>
+    
+    <div class="cat-grid" id="cat-grid-productos"></div>
+    
+    <div class="cat-cart-bar" onclick="abrirModalCarritoPublico()">
+        <div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:900; text-transform:uppercase;">Total Pedido</div>
+            <div class="cat-cart-total" id="cat-cart-total-txt">$0.00</div>
+        </div>
+        <button class="cat-cart-btn" id="cat-cart-btn-txt">Ver Carrito (0)</button>
+    </div>
+</div>
+
+<div id="modal-carrito-pub" class="modal-overlay">
+  <div class="modal-box" style="display:flex; flex-direction:column; max-height:90vh; background: rgba(17,26,46,0.98); backdrop-filter: blur(20px);">
+    <button class="btn-close-modal" onclick="document.getElementById('modal-carrito-pub').style.display='none'">✖</button>
+    <h3 style="margin-top:0; color:var(--accent); display:flex; align-items:center; gap:8px; font-weight:900; text-shadow:0 0 10px rgba(0,242,214,0.4);">🛒 Tu Pedido</h3>
+    
+    <div id="cat-carrito-items" style="flex:1; overflow-y:auto; margin-bottom:16px;"></div>
+    
+    <div style="background:rgba(0,0,0,0.4); padding:18px; border-radius:14px; margin-bottom:18px; border:2px solid var(--border-color);">
+      <div style="display:flex; justify-content:space-between; font-weight:900; font-size:22px; color:#fff;"><span>Total:</span> <span id="cat-checkout-total" style="color:var(--accent); text-shadow:0 0 10px rgba(0,242,214,0.5);">$0.00</span></div>
+      <div style="display:flex; justify-content:space-between; font-weight:800; font-size:13px; color:var(--warning); margin-top:6px;"><span>En Bolívares:</span> <span id="cat-checkout-bs">Bs. 0.00</span></div>
+    </div>
+    
+    <div class="form-group" style="margin-bottom:12px;"><label>Tu Nombre y Apellido</label><input type="text" id="cat-cli-nombre" class="user-input" placeholder="Ej: Maria Perez"></div>
+    <div class="form-group" style="margin-bottom:12px;"><label>Teléfono de Contacto</label><input type="text" id="cat-cli-tel" class="user-input" placeholder="Ej: 04121234567"></div>
+    <div class="form-group" style="margin-bottom:20px;"><label>Dirección de Entrega</label><input type="text" id="cat-cli-dir" class="user-input" placeholder="Ej: Urb. El Centro, Calle 2"></div>
+    
+    <button class="btn-primary" id="btn-enviar-pedido-web" onclick="enviarPedidoWeb()" style="width:100%; padding:15px; font-size:16px; font-weight:900;">🚀 Enviar Pedido</button>
+  </div>
+</div>
+
+<div id="app-admin" style="display:none;">
+  <div class="header-bar">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); background: linear-gradient(135deg, #111a2e, #1a2642); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 20px rgba(0,242,214,0.4); overflow: hidden;">
+        <img src="logo.jpg.jpg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+        <div id="logo-fallback" style="display:none; color:#070b14; font-size:26px; font-weight:900;">🧴</div>
+      </div>
+      <div>
+        <h1 class="brand-title">PERFUMA2</h1>
+        <div class="brand-subtitle">v.95 oyamh95</div>
+      </div>
+    </div>
+    
+    <div class="header-controls">
+      <div id="reloj-sistema" style="font-size: 13px; color: var(--accent); font-weight: 900; margin-right: 10px; background: rgba(0,242,214,0.1); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,242,214,0.3); text-shadow: 0 0 8px rgba(0,242,214,0.4);"></div>
+      
+      <button class="btn-primary" onclick="solicitarPermisoNotificaciones()" style="background:var(--purple); color:#fff; font-size:11px;" title="Activa notificaciones push">🔔 Activar Alertas Push</button>
+      
+      <div class="tasa-box activa" id="box-tasa-bcv" onclick="alternarTipoTasa('bcv')">
+        <input type="checkbox" id="check-tasa-bcv" checked style="accent-color:var(--accent); pointer-events:none;">
+        <div title="Tasa Oficial BCV">
+          <span class="tasa-label">Tasa BCV (Bs)</span>
+          <input type="number" step="0.01" id="tasaBCVInput" class="tasa-input" onchange="actualizarTasaManual('bcv')" onclick="event.stopPropagation()">
+        </div>
+      </div>
+      
+      <button class="btn-primary" onclick="obtenerTasasAutomaticas()" style="background:var(--info); font-size:11px; padding:8px 12px;" title="Actualizar Tasa BCV Ahora">🔄 Actualizar Tasa</button>
+      
+      <div class="tasa-box" id="box-tasa-usdt" onclick="alternarTipoTasa('usdt')">
+        <input type="checkbox" id="check-tasa-usdt" style="accent-color:var(--accent); pointer-events:none;">
+        <div title="Tasa USDT Manual">
+          <span class="tasa-label">Tasa USDT (Manual)</span>
+          <input type="number" step="0.01" id="tasaUSDTInput" class="tasa-input" onchange="actualizarTasaManual('usdt')" onclick="event.stopPropagation()">
+        </div>
+      </div>
+      
+      <div id="cloud-status" style="font-size:11px; font-weight:900; color:var(--success); margin-right:5px; text-shadow:0 0 8px rgba(6,214,160,0.5);">● Sincronizado</div>
+      <button class="btn-secondary" onclick="window.location.reload(true)">🔄 Recargar</button>
+      <button id="btn-sync-manual" class="btn-primary" onclick="guardarCambiosEnNube(true)">☁️ Guardar Nube</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="cambiarTab('dashboard', this)">📊 Dashboard</button>
+    <button class="tab-btn" onclick="cambiarTab('pedidos', this)">🔔 Pedidos Web <span class="badge-alerta" id="badge-pedidos">0</span></button>
+    <button class="tab-btn" onclick="cambiarTab('inventario', this)">🧴 Catálogo & Stock</button>
+    <button class="tab-btn" onclick="cambiarTab('ventas', this)">💳 Ventas Detal</button>
+    <button class="tab-btn" onclick="cambiarTab('mayor', this)" style="border-color: var(--warning); color: var(--warning);">📦 Venta al Mayor</button>
+    <button class="tab-btn" onclick="cambiarTab('combos', this)" style="border-color: #ff007f; color: #ff007f;">🎁 Combos</button>
+    <button class="tab-btn" onclick="cambiarTab('decants', this)" style="border-color: var(--warning); color: var(--warning);">🧪 Decants</button>
+    <button class="tab-btn" onclick="cambiarTab('clientes', this)">👥 CRM Clientes</button>
+    <button class="tab-btn" onclick="cambiarTab('gastos', this)">📉 Gastos</button>
+    <button class="tab-btn" onclick="cambiarTab('ia', this)" style="color:var(--info); border-color: rgba(58,134,255,0.4);">🤖 Asistente IA</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div style="background: rgba(58,134,255,0.1); border: 2px solid var(--info); padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 4px 20px rgba(58,134,255,0.2);">
+      <div>
+        <h4 style="margin:0 0 4px 0; color:var(--info); font-weight:900;">🏦 Herramientas de Base de Datos & Cierre</h4>
+        <p style="margin:0; font-size:12px; color:var(--text-muted); font-weight:700;">Descarga respaldos offline de seguridad, cierre de caja y link del catálogo.</p>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn-primary" style="background:var(--success); color:#070b14; font-weight:900;" onclick="descargarRespaldoJSON()">💾 Descargar Respaldo JSON</button>
+          <button class="btn-secondary" style="border-color:var(--warning); color:var(--warning); font-weight:900;" onclick="document.getElementById('input-restaurar-json').click()">📂 Restaurar Respaldo</button>
+          <input type="file" id="input-restaurar-json" accept=".json" style="display:none;" onchange="restaurarRespaldoJSON(this)">
+          
+          <button class="btn-secondary" style="border-color:var(--info); color:var(--info); font-weight:900;" onclick="copiarLinkCatalogo()">🔗 Copiar Link Catálogo</button>
+          <button class="btn-primary" style="background:var(--info); color:#fff; font-weight:900;" onclick="generarCierreCaja()">Generar Reporte de Hoy</button>
+      </div>
+    </div>
+
+    <div class="card-panel" style="border-color: var(--success); padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 8px 25px rgba(6,214,160,0.15);">
+        <h4 style="margin:0 0 8px 0; color:var(--success); font-weight:900;">📱 Número para recibir Pedidos Web</h4>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="config-wa-tienda" class="user-input" placeholder="Ej: 584120551688" style="max-width: 250px;">
+            <button class="btn-primary" onclick="guardarNumeroWA()" style="background: var(--success); font-weight:900;">💾 Guardar Número</button>
+        </div>
+        <p style="margin:6px 0 0 0; font-size:11px; color:var(--text-muted); font-weight:700;">Usa el código de país (Ej: 58 para Venezuela) sin el signo + ni espacios.</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Ventas Totales</div>
+        <div class="kpi-value" id="kpi-ventas" style="color:#fff;">$0.00</div>
+        <div class="kpi-sub" id="kpi-ventas-bs">Bs. 0.00</div>
+      </div>
+      <div class="kpi-card" style="border-left: 4px solid var(--accent);">
+        <div class="kpi-title">Ganancia Bruta (Ventas)</div>
+        <div class="kpi-value" id="kpi-ganancia" style="color:var(--accent); text-shadow:0 0 10px rgba(0,242,214,0.4);">$0.00</div>
+        <div class="kpi-sub" id="kpi-ganancia-bs">Libre de Costos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Utilidad Neta (Caja)</div>
+        <div class="kpi-value" id="kpi-utilidad" style="color:var(--success); text-shadow:0 0 10px rgba(6,214,160,0.4);">$0.00</div>
+        <div class="kpi-sub" id="kpi-utilidad-bs">Abonado - Gastos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Por Cobrar (Deudas)</div>
+        <div class="kpi-value" id="kpi-por-cobrar" style="color:var(--warning);">$0.00</div>
+        <div class="kpi-sub" id="kpi-por-cobrar-bs">Bs. 0.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Stock Físico (Unidades)</div>
+        <div class="kpi-value" id="kpi-stock" style="color:#fff;">0</div>
+        <div class="kpi-sub" id="kpi-stock-alert" style="color:var(--danger);">Cajas Selladas</div>
+      </div>
+      <div class="kpi-card" style="border-left: 4px solid var(--purple);">
+        <div class="kpi-title">Capital en Stock (Costo)</div>
+        <div class="kpi-value" id="kpi-valor-stock" style="color:var(--purple);">$0.00</div>
+        <div class="kpi-sub" id="kpi-ganancia-potencial">Proyección Venta: $0.00</div>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-bottom: 20px;">
+      <div class="card-panel" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <h3 class="card-title" style="margin-bottom: 14px;">📈 Top 5 Perfumes Más Vendidos</h3>
+        <div style="flex:1; position:relative; min-height:220px;"><canvas id="graficaVentasTop"></canvas></div>
+      </div>
+      <div class="card-panel" style="margin-bottom:0; display:flex; flex-direction:column;">
+        <h3 class="card-title" style="margin-bottom: 14px;">💳 Distribución de Pagos</h3>
+        <div style="flex:1; position:relative; min-height:220px; display:flex; justify-content:center;"><canvas id="graficaPagos"></canvas></div>
+      </div>
+      <div class="card-panel" style="margin-bottom:0; overflow-y:auto; max-height:280px;">
+        <h3 class="card-title" style="margin-bottom: 14px; color:var(--accent);">👑 Mejores Clientes</h3>
+        <div id="dash-mejores-clientes" style="font-size: 13px; font-weight: 700;">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PEDIDOS WEB -->
+  <div id="tab-pedidos" class="tab-content">
+    <div class="card-panel" style="border-color: var(--danger); box-shadow: 0 8px 30px rgba(255,77,109,0.2);">
+      <div class="card-header">
+        <div>
+            <h3 class="card-title" style="color:var(--danger); text-shadow:0 0 10px rgba(255,77,109,0.4);">🔔 Buzón de Pedidos Web</h3>
+            <p style="margin:4px 0 0 0; font-size:12px; color:var(--text-muted); font-weight:700;">Los clientes arman su pedido en el catálogo y llegan aquí para facturar con un clic.</p>
+        </div>
+        <button class="btn-danger" onclick="limpiarPedidosWeb()" style="padding: 8px 14px; font-size: 11px; font-weight: 900;">🗑️ Borrar Todos</button>
+      </div>
+      <div id="contenedor-pedidos-web" style="display:flex; flex-direction:column; gap:14px;"></div>
+    </div>
+  </div>
+
+  <!-- INVENTARIO -->
+  <div id="tab-inventario" class="tab-content">
+    <div class="card-panel">
+      <div class="card-header">
+        <h3 class="card-title">🧴 Inventario General & Stock</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <select id="orden-stock" class="user-input" style="width: auto; padding: 8px 12px;" onchange="renderInventario()">
+            <option value="mayor" selected>⬇️ Mayor stock</option>
+            <option value="menor">⬆️ Menor stock</option>
+            <option value="nombre">🔤 Nombre / Marca</option>
+          </select>
+          <div style="background:var(--bg-input); padding:6px 12px; border-radius:10px; border:2px solid var(--border-color); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:900;">Margen (%):</span>
+            <input type="number" id="input-margen-global" class="user-input" style="width:55px; padding:4px 8px; text-align:center;">
+            <button class="btn-primary" onclick="aplicarMargenGlobal()" style="padding:6px 10px; font-size:10px; font-weight:900;">Aplicar</button>
+          </div>
+          <input type="text" id="buscar-inv" class="user-input" placeholder="Buscar perfume..." style="width:170px;" oninput="renderInventario()">
+          
+          <button class="btn-primary" onclick="unificarStockDuplicado()" style="background:var(--purple); font-weight:900;">🧹 Unificar Stock</button>
+          <button class="btn-danger" onclick="resetearStockCero()">0️⃣ Stock 0</button>
+          <button class="btn-primary" onclick="abrirModalSync()" style="background:var(--info); font-weight:900;">☁️ Importar Excel</button>
+          <button class="btn-primary" onclick="abrirModalPerfume()" style="font-weight:900;">+ Nuevo</button>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Marca</th>
+              <th>Perfume / Inspiración / Notas</th>
+              <th>Stock / ML</th>
+              <th>Costo ($)</th>
+              <th>Precio ($)</th>
+              <th>Precio (Bs)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-inventario"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENTAS DETAL -->
+  <div id="tab-ventas" class="tab-content">
+    <div class="card-panel">
+      <h3 class="card-title" style="margin-bottom:16px;">🛒 Registrar Venta Detal</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>Cliente</label><input type="text" id="v-cliente" class="user-input" placeholder="Nombre"></div>
+        <div class="form-group"><label>Teléfono Cliente</label><input type="text" id="v-telefono" class="user-input" placeholder="WhatsApp"></div>
+        <div class="form-group">
+          <label>Medio de Pago</label>
+          <select id="v-metodo" class="user-input">
+            <option value="Pago Móvil">Pago Móvil</option>
+            <option value="Zelle">Zelle</option>
+            <option value="Binance Pay (USDT)">Binance Pay (USDT)</option>
+            <option value="Efectivo ($)">Efectivo ($)</option>
+            <option value="Transferencia Bs">Transferencia Bs</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Dirección / Zona</label><input type="text" id="v-direccion" class="user-input" placeholder="Ej: Urb. El Centro"></div>
+      </div>
+      
+      <div class="form-group" style="grid-column: 1 / -1; margin-bottom:12px;">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--info); font-size:14px; font-weight:800;">
+          <input type="checkbox" id="v-usa-delivery" onchange="toggleDeliveryPanel('detal')" style="width:18px; height:18px; accent-color:var(--info);">
+          🛵 ¿Enviar pedido con un Motorizado?
+        </label>
+      </div>
+      <div id="v-delivery-panel" style="display:none; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:16px; background:rgba(58,134,255,0.1); padding:14px; border-radius:12px; border:2px dashed var(--info);">
+         <div class="form-group"><label>Nombre Motorizado</label><input type="text" id="v-motorizado-nombre" class="user-input" placeholder="Ej: Carlos"></div>
+         <div class="form-group"><label>Teléfono Motorizado</label><input type="text" id="v-motorizado-telefono" class="user-input" placeholder="Ej: 04121234567"></div>
+         <div class="form-group"><label>Delivery a cobrar ($)</label><input type="number" step="0.5" id="v-delivery" class="user-input" value="0" oninput="recalcularTotalesVenta('detal')"></div>
+      </div>
+
+      <div style="background:var(--bg-input); padding:14px; border-radius:12px; border:2px solid var(--border-color); margin-bottom:16px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:3; min-width:220px;"><input type="text" id="v-producto-input" class="user-input" list="lista-productos-stock" placeholder="Buscar perfume en stock (Sellados)..."></div>
+          <div style="flex:1; min-width:80px;"><input type="number" id="v-cantidad-item" class="user-input" value="1" min="1"></div>
+          <button class="btn-primary" type="button" onclick="agregarItemAlCarrito('detal')" style="padding:11px 16px; height:42px; font-weight:900;">+ Añadir Perfume</button>
+        </div>
+      </div>
+      <div class="carrito-caja" id="v-items-carrito-lista"><div style="color:var(--text-muted); font-style:italic;">Carrito vacío.</div></div>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Plan Financiamiento</label>
+          <select id="v-plan" class="user-input" onchange="recalcularTotalesVenta('detal')">
+            <option value="Contado">Contado</option>
+            <option value="2 Cuotas">Cashea / 2 Cuotas</option>
+            <option value="3 Cuotas">3 Cuotas</option>
+            <option value="4 Cuotas">4 Cuotas</option>
+            <option value="5 Cuotas">5 Cuotas</option>
+            <option value="6 Cuotas">6 Cuotas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plazo entre Cuotas</label>
+          <select id="v-plazo-dias" class="user-input">
+            <option value="5">Cada 5 Días</option>
+            <option value="10" selected>Cada 10 Días</option>
+            <option value="15">Cada 15 Días</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Monto Inicial / Abonado ($)</label><input type="number" step="0.01" id="v-abono" class="user-input" value="0" oninput="recalcularTotalesVenta('detal')"></div>
+      </div>
+      
+      <div style="background:#070b14; padding:18px; border-radius:12px; border:2px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; box-shadow:inset 0 4px 10px rgba(0,0,0,0.5);">
+        <div>
+          <div id="v-resumen-abono" style="color:var(--accent); font-weight:900; font-size:18px; text-shadow:0 0 10px rgba(0,242,214,0.4);">Total a Cobrar: $0.00</div>
+          <div id="v-resumen-plan" style="color:var(--text-muted); font-size:12px; font-weight:700;">0 perfumes</div>
+        </div>
+        <div id="v-resumen-restante" style="color:var(--warning); font-weight:900; font-size:18px;">Saldo Restante: $0.00</div>
+      </div>
+      <button class="btn-primary" onclick="registrarVenta('detal')" style="width:100%; justify-content:center; padding:15px; font-size:15px; font-weight:900;">💾 Registrar Venta Detal & Recibo</button>
+    </div>
+    
+    <div class="card-panel">
+      <div class="card-header"><h3 class="card-title">📋 Historial de Ventas (Detal)</h3></div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Cliente</th>
+              <th>Productos</th>
+              <th>Total ($/Bs)</th>
+              <th>Abonado ($/Bs)</th>
+              <th>Pendiente ($/Bs)</th>
+              <th>Plan / Vence</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-ventas-detal"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENTA AL MAYOR -->
+  <div id="tab-mayor" class="tab-content">
+    <div class="card-panel" style="border-color: var(--warning); box-shadow: 0 8px 30px rgba(255,183,3,0.15);">
+      <h3 class="card-title" style="margin-bottom:16px; color:var(--warning);">📦 Presupuesto y Venta al Mayor</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>Cliente Mayorista</label><input type="text" id="m-cliente" class="user-input" placeholder="Nombre de tienda"></div>
+        <div class="form-group"><label>Teléfono Cliente</label><input type="text" id="m-telefono" class="user-input" placeholder="WhatsApp"></div>
+        <div class="form-group"><label>Margen Mayorista (%)</label><input type="number" id="m-margen" class="user-input" value="15" min="0" oninput="recalcularTotalesVenta('mayor')"></div>
+        <div class="form-group">
+          <label>Medio de Pago</label>
+          <select id="m-metodo" class="user-input">
+            <option value="Zelle">Zelle</option>
+            <option value="Binance Pay (USDT)">Binance Pay (USDT)</option>
+            <option value="Efectivo ($)">Efectivo ($)</option>
+            <option value="Pago Móvil">Pago Móvil</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Dirección / Encomienda</label><input type="text" id="m-direccion" class="user-input" placeholder="Ej: MRW Centro"></div>
+      </div>
+      
+      <div class="form-group" style="grid-column: 1 / -1; margin-bottom:12px;">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--warning); font-size:14px; font-weight:800;">
+          <input type="checkbox" id="m-usa-delivery" onchange="toggleDeliveryPanel('mayor')" style="width:18px; height:18px; accent-color:var(--warning);">
+          🛵 ¿Enviar pedido con un Motorizado?
+        </label>
+      </div>
+      <div id="m-delivery-panel" style="display:none; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:16px; background:rgba(255,183,3,0.1); padding:14px; border-radius:12px; border:2px dashed var(--warning);">
+         <div class="form-group"><label>Nombre Motorizado</label><input type="text" id="m-motorizado-nombre" class="user-input" placeholder="Ej: Carlos"></div>
+         <div class="form-group"><label>Teléfono Motorizado</label><input type="text" id="m-motorizado-telefono" class="user-input" placeholder="Ej: 04121234567"></div>
+         <div class="form-group"><label>Delivery a cobrar ($)</label><input type="number" step="0.5" id="m-delivery" class="user-input" value="0" oninput="recalcularTotalesVenta('mayor')"></div>
+      </div>
+
+      <div style="background:var(--bg-input); padding:14px; border-radius:12px; border:2px solid var(--warning); margin-bottom:16px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:3; min-width:220px;"><input type="text" id="m-producto-input" class="user-input" list="lista-productos-stock" placeholder="Buscar perfume en stock..."></div>
+          <div style="flex:1; min-width:80px;"><input type="number" id="m-cantidad-item" class="user-input" value="6" min="1"></div>
+          <button class="btn-warning" type="button" onclick="agregarItemAlCarrito('mayor')" style="padding:11px 16px; height:42px; font-weight:900;">+ Añadir Mayor</button>
+        </div>
+      </div>
+      <div class="carrito-caja" id="m-items-carrito-lista"><div style="color:var(--text-muted); font-style:italic;">Carrito mayorista vacío.</div></div>
+      
+      <div style="background:#070b14; padding:18px; border-radius:12px; border:2px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; box-shadow:inset 0 4px 10px rgba(0,0,0,0.5);">
+        <div>
+          <div id="m-resumen-total" style="color:var(--warning); font-weight:900; font-size:20px;">Total al Mayor: $0.00</div>
+          <div id="m-resumen-piezas" style="color:var(--text-muted); font-size:12px; font-weight:700;">0 piezas totales</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button class="btn-secondary" onclick="generarCotizacionMayor()" style="flex:1; padding:14px; font-size:15px; color:#fff; border-color:var(--warning); font-weight:900;">📲 Cotización</button>
+        <button class="btn-warning" onclick="registrarVenta('mayor')" style="flex:1.5; padding:14px; font-size:15px; font-weight:900;">💾 Registrar Venta</button>
+      </div>
+    </div>
+    
+    <div class="card-panel">
+      <div class="card-header"><h3 class="card-title">📋 Historial de Ventas (Al Mayor)</h3></div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Cliente</th>
+              <th>Productos</th>
+              <th>Total ($/Bs)</th>
+              <th>Abonado ($/Bs)</th>
+              <th>Pendiente ($/Bs)</th>
+              <th>Plan / Vence</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-ventas-mayor"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMBOS -->
+  <div id="tab-combos" class="tab-content">
+    <div class="card-panel" style="border-color: #ff007f; box-shadow: 0 8px 30px rgba(255,0,127,0.15);">
+      <h3 class="card-title" style="margin-bottom:6px; color:#ff007f;">🎁 Creador de Combos Especiales</h3>
+      <p style="color:var(--text-muted); font-size:12px; font-weight:700; margin-bottom:18px;">Agrupa perfumes y decants a un precio especial validando márgenes reales.</p>
+      
+      <div class="form-grid">
+        <div class="form-group"><label>Nombre del Combo</label><input type="text" id="combo-nombre" class="user-input" placeholder="Ej: Combo Enamorados"></div>
+      </div>
+
+      <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:2px solid #ff007f; margin-bottom:16px;">
+        <h4 style="margin: 0 0 12px 0; color:#fff; font-size:13px; font-weight:900;">Productos que incluye</h4>
+        <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:3; min-width:200px;"><input type="text" id="combo-prod1" class="user-input" list="lista-productos-combos" placeholder="Producto 1..." onchange="calcularCostoCombo()"></div>
+          <div style="flex:1; min-width:60px;"><input type="number" id="combo-cant1" class="user-input" value="1" min="1" oninput="calcularCostoCombo()"></div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:3; min-width:200px;"><input type="text" id="combo-prod2" class="user-input" list="lista-productos-combos" placeholder="Producto 2 (Opcional)..." onchange="calcularCostoCombo()"></div>
+          <div style="flex:1; min-width:60px;"><input type="number" id="combo-cant2" class="user-input" value="1" min="1" oninput="calcularCostoCombo()"></div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group"><label>Costo Base Real</label><input type="text" id="combo-costo-base" class="user-input" value="$0.00" readonly style="color:var(--warning); font-weight:900;"></div>
+        <div class="form-group"><label>Precio de Venta Oferta ($)</label><input type="number" step="0.01" id="combo-precio-venta" class="user-input" placeholder="Ej: 35.00" oninput="calcularCostoCombo()"></div>
+      </div>
+
+      <div id="combo-resultado-matematico" style="background:#070b14; padding:18px; border-radius:12px; border:2px solid var(--border-color); margin-bottom:18px; text-align:center; box-shadow:inset 0 4px 10px rgba(0,0,0,0.5);">
+        <div style="color:var(--text-muted); font-size:12px; font-weight:800;">Margen de Ganancia del Combo:</div>
+        <div id="combo-margen-display" style="font-size:26px; font-weight:900; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.3);">0%</div>
+        <div id="combo-advertencia" style="font-size:12px; font-weight:800; margin-top:6px;">Calculando...</div>
+      </div>
+
+      <button class="btn-primary" onclick="guardarComboCatalogo()" style="width:100%; justify-content:center; padding:15px; font-size:15px; font-weight:900; background:linear-gradient(135deg, #ff007f, #d90429); box-shadow:0 4px 20px rgba(255,0,127,0.4);">💾 Guardar Combo en Inventario</button>
+    </div>
+  </div>
+
+  <!-- DECANTS -->
+  <div id="tab-decants" class="tab-content">
+    <div class="card-panel" style="border-color:var(--warning); background:rgba(255,183,3,0.02); box-shadow: 0 8px 30px rgba(255,183,3,0.15);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
+        <h3 class="card-title" style="color:var(--warning); margin:0;">🛒 Carrito de Decants (Muestras)</h3>
+        <button class="btn-secondary" onclick="destaparDesdeDecantsTab()" style="border-color:var(--warning); color:var(--warning); font-size:11px; padding:6px 12px; font-weight:900;">💧 Destapar Botella Nueva</button>
+      </div>
+      
+      <div class="form-grid">
+        <div class="form-group"><label>Cliente</label><input type="text" id="dec-cliente" class="user-input" placeholder="Nombre"></div>
+        <div class="form-group"><label>Teléfono Cliente</label><input type="text" id="dec-telefono" class="user-input" placeholder="WhatsApp"></div>
+        <div class="form-group">
+          <label>Medio de Pago</label>
+          <select id="dec-metodo" class="user-input">
+            <option value="Pago Móvil">Pago Móvil</option>
+            <option value="Zelle">Zelle</option>
+            <option value="Binance Pay (USDT)">Binance Pay (USDT)</option>
+            <option value="Efectivo ($)">Efectivo ($)</option>
+            <option value="Transferencia Bs">Transferencia Bs</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Dirección / Zona</label><input type="text" id="dec-direccion" class="user-input" placeholder="Opcional"></div>
+      </div>
+      
+      <div class="form-group" style="grid-column: 1 / -1; margin-bottom:12px;">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--warning); font-size:14px; font-weight:800;">
+          <input type="checkbox" id="dec-usa-delivery" onchange="toggleDeliveryPanel('decant')" style="width:18px; height:18px; accent-color:var(--warning);">
+          🛵 ¿Enviar pedido con un Motorizado?
+        </label>
+      </div>
+      <div id="dec-delivery-panel" style="display:none; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:16px; background:rgba(255,183,3,0.1); padding:14px; border-radius:12px; border:2px dashed var(--warning);">
+         <div class="form-group"><label style="color:var(--warning);">Nombre Motorizado</label><input type="text" id="dec-motorizado-nombre" class="user-input" placeholder="Ej: Carlos"></div>
+         <div class="form-group"><label style="color:var(--warning);">Teléfono Motorizado</label><input type="text" id="dec-motorizado-telefono" class="user-input" placeholder="Ej: 04121234567"></div>
+         <div class="form-group"><label style="color:var(--warning);">Delivery a cobrar ($)</label><input type="number" step="0.5" id="dec-delivery" class="user-input" value="0" oninput="recalcularTotalesVentaDecant()"></div>
+      </div>
+
+      <div style="background:var(--bg-input); padding:18px; border-radius:12px; border:2px solid var(--warning); margin-bottom:16px;">
+        <h4 style="margin: 0 0 12px 0; color:#fff; font-size:13px; font-weight:900; text-transform:uppercase;">🧪 Prepara la Muestra</h4>
+        
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px;">
+          <div style="flex:3; min-width:240px;">
+              <label style="font-size:10px; color:var(--text-muted); font-weight:900;">Elegir Frasco Abierto</label>
+              <select id="dec-producto-select" class="user-input" onchange="seleccionarDecantDesdeSelect()" style="margin-bottom:6px;">
+                  <option value="">-- Elige un frasco abierto --</option>
+              </select>
+              <input type="text" id="dec-producto-input" class="user-input" list="lista-productos-decants" placeholder="O escribe para buscar frasco..." oninput="sugerirPrecioDecant()">
+          </div>
+          <div style="flex:1; min-width:90px;">
+              <label style="font-size:10px; color:var(--text-muted); font-weight:900;">ML</label>
+              <select id="dec-ml" class="user-input" onchange="sugerirPrecioDecant()">
+                  <option value="5">5 ml</option>
+                  <option value="10" selected>10 ml</option>
+                  <option value="15">15 ml</option>
+                  <option value="20">20 ml</option>
+                  <option value="30">30 ml</option>
+              </select>
+          </div>
+          <div style="flex:1; min-width:80px;">
+              <label style="font-size:10px; color:var(--text-muted); font-weight:900;">Cantidad</label>
+              <input type="number" id="dec-cantidad" class="user-input" value="1" min="1" oninput="sugerirPrecioDecant()">
+          </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+            <div style="flex:1; min-width:120px;">
+              <label style="font-size:10px; color:var(--text-muted); font-weight:900;">Costo Viales ($)</label>
+              <input type="number" step="0.1" id="dec-costo-vial" class="user-input" value="0.80" oninput="sugerirPrecioDecant()">
+            </div>
+            <div style="flex:1; min-width:120px;">
+              <label style="font-size:10px; color:var(--text-muted); font-weight:900;">Precio Venta ($)</label>
+              <input type="number" step="0.5" id="dec-precio" class="user-input" value="0.00" style="color:var(--accent); font-weight:900; font-size:15px;">
+            </div>
+            <button class="btn-primary" type="button" onclick="agregarAlCarritoDecant()" style="padding:11px 16px; height:42px; background:var(--warning); color:#070b14; font-weight:900;">+ Añadir Carrito</button>
+        </div>
+        <div id="dec-sugerencia-txt" style="font-size:11px; color:var(--text-muted); margin-top:8px; font-weight:700; font-style:italic;"></div>
+      </div>
+      
+      <div class="carrito-caja" id="dec-items-carrito-lista" style="border-color:var(--warning);"><div style="color:var(--text-muted); font-style:italic;">Carrito de decants vacío.</div></div>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Plan Financiamiento</label>
+          <select id="dec-plan" class="user-input" onchange="recalcularTotalesVentaDecant()">
+            <option value="Contado">Contado</option>
+            <option value="2 Cuotas">Cashea / 2 Cuotas</option>
+            <option value="3 Cuotas">3 Cuotas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plazo entre Cuotas</label>
+          <select id="dec-plazo-dias" class="user-input">
+            <option value="5">Cada 5 Días</option>
+            <option value="10" selected>Cada 10 Días</option>
+            <option value="15">Cada 15 Días</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Monto Inicial ($)</label><input type="number" step="0.01" id="dec-abono" class="user-input" value="0" oninput="recalcularTotalesVentaDecant()"></div>
+      </div>
+      
+      <div style="background:#070b14; padding:18px; border-radius:12px; border:2px solid var(--warning); display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; box-shadow:inset 0 4px 10px rgba(0,0,0,0.5);">
+        <div id="dec-resumen-abono" style="color:var(--warning); font-weight:900; font-size:18px;">Total a Cobrar: $0.00</div>
+        <div id="dec-resumen-restante" style="color:var(--danger); font-weight:900; font-size:18px;">Saldo Restante: $0.00</div>
+      </div>
+      <button class="btn-primary" onclick="registrarVentaDecant()" style="width:100%; justify-content:center; padding:15px; font-size:15px; background:var(--warning); color:#070b14; font-weight:900;">💾 Registrar Venta Decants & Recibo</button>
+    </div>
+    
+    <div class="card-panel">
+      <div class="card-header"><h3 class="card-title">📋 Historial de Ventas (Muestras / Decants)</h3></div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Cliente</th>
+              <th>Productos</th>
+              <th>Total ($/Bs)</th>
+              <th>Abonado ($/Bs)</th>
+              <th>Pendiente ($/Bs)</th>
+              <th>Plan / Vence</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-ventas-decants"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div id="tab-clientes" class="tab-content">
+    <div class="card-panel">
+      <div class="card-header">
+        <h3 class="card-title">👥 CRM Clientes</h3>
+        <input type="text" id="buscar-crm" class="user-input" placeholder="Buscar..." style="width:200px;" oninput="renderClientes()">
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th>Perfumes</th>
+              <th>Total ($)</th>
+              <th>Abonado ($)</th>
+              <th>Restante ($)</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-clientes"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GASTOS -->
+  <div id="tab-gastos" class="tab-content">
+    <div class="card-panel">
+      <h3 class="card-title" style="margin-bottom:16px;">📉 Gastos</h3>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
+        <input type="text" id="g-concepto" class="user-input" placeholder="Concepto..." style="flex:2;">
+        <input type="number" step="0.01" id="g-monto" class="user-input" placeholder="Monto ($)" style="flex:1;">
+        <button class="btn-primary" onclick="agregarGasto()" style="font-weight:900;">+ Agregar</button>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Concepto</th>
+              <th>Monto ($)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-gastos"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASISTENTE IA -->
+  <div id="tab-ia" class="tab-content">
+    <div class="card-panel">
+      <h3 class="card-title" style="margin-bottom:8px;">🤖 Asistente de Inteligencia Empresarial</h3>
+      <p style="color:var(--text-muted); font-size:12px; font-weight:700; margin-bottom:20px;">Análisis automático de clientes, rentabilidad y stock.</p>
+      <div id="ia-contenedor-alertas"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALES -->
+<!-- MODAL DE ACTUALIZACIÓN Y ROLLBACK (ACCESO DESDE BADGE FLOTANTE) -->
+<div id="modal-actualizador" class="modal-overlay">
+  <div class="modal-box" style="border-color: var(--accent); max-width: 500px;">
+    <button class="btn-close-modal" onclick="cerrarModalActualizador()">✖</button>
+    <h3 style="margin-top:0; color:var(--accent); font-weight:900;">🚀 Actualizador del Sistema</h3>
+    <p style="color:var(--text-muted); font-size:12px; margin-bottom:14px;">
+      Publica mejoras en caliente o regresa a la versión previa si algo falla.
+    </p>
+
+    <div style="background:var(--bg-input); padding:10px; border-radius:10px; margin-bottom:14px; font-size:12px;">
+      <div>📌 <b>Versión activa:</b> <span id="act-ver-actual" style="color:var(--accent);">v.95 oyamh95</span></div>
+      <div>⏪ <b>Respaldo anterior:</b> <span id="act-ver-previa" style="color:var(--warning);">Ninguno</span></div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Etiqueta de la nueva versión</label>
+      <input type="text" id="act-nueva-version" class="user-input" placeholder="Ej: v.96 WhatsApp Automático">
+    </div>
+
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Código o Instrucción de Parche (JavaScript)</label>
+      <textarea id="act-codigo-nuevo" class="user-input" style="height:110px; font-family:monospace; font-size:11px;" placeholder="Pega aquí el código que te entregue Gemini..."></textarea>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button class="btn-primary" onclick="publicarActualizacion()" style="flex:1; padding:12px; font-weight:900;">
+        ⬆️ Aplicar Actualización
+      </button>
+      <button class="btn-secondary" onclick="revertirVersion()" style="border-color:var(--danger); color:var(--danger); padding:12px; font-weight:900;">
+        ⏪ Revertir (Atrás)
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-perfume" class="modal-overlay">
+  <div class="modal-box">
+    <button class="btn-close-modal" onclick="cerrarModalPerfume()">✖</button>
+    <h3 id="modal-perfume-titulo" style="margin-top:0; font-weight:900;">🧴 Agregar / Editar Perfume</h3>
+    <input type="hidden" id="p-id">
+    
+    <div class="form-grid">
+      <div class="form-group" style="margin-bottom:12px;"><label>Marca</label><input type="text" id="p-marca" class="user-input" placeholder="Ej: Lattafa"></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>Nombre</label><input type="text" id="p-nombre" class="user-input" placeholder="Ej: Asad"></div>
+    </div>
+    
+    <div class="form-group" style="margin-bottom: 14px;">
+        <label>Notas Olfativas / Fragancia</label>
+        <input type="text" id="p-notas" class="user-input" placeholder="Ej: Amaderado, Dulce...">
+    </div>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+      <div class="form-group"><label>Formato</label><input type="text" id="p-formato" class="user-input" value="100ml"></div>
+      <div class="form-group"><label>Stock</label><input type="number" id="p-stock" class="user-input" value="0"></div>
+    </div>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:18px;">
+      <div class="form-group"><label>Costo ($)</label><input type="number" step="0.01" id="p-costo" class="user-input" value="15.00" oninput="recalcularPrecioDesdeMargen()"></div>
+      <div class="form-group"><label>Margen (%)</label><input type="number" step="1" id="p-margen" class="user-input" value="50" oninput="recalcularPrecioDesdeMargen()"></div>
+      <div class="form-group"><label>Venta ($)</label><input type="number" step="0.01" id="p-precio" class="user-input" value="22.50" oninput="recalcularMargenDesdePrecio()"></div>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 18px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 2px solid var(--border-color);">
+        <label style="color: var(--text-muted); margin-bottom: 8px; display: block; font-weight: 900;">Imagen del Perfume (URL o Archivo)</label>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="p-img-url" class="user-input" placeholder="Pega el enlace web aquí" oninput="limpiarEnlaceImagen(this)" style="flex:1;">
+                <button class="btn-secondary" type="button" onclick="buscarImagenGoogleModal()" style="padding:0 12px;" title="Buscar en Google">🔍 Buscar</button>
+            </div>
+            <input type="file" id="p-img-file" class="user-input" accept="image/*" onchange="convertirImagenLocal(this)" style="padding: 8px;">
+            <input type="hidden" id="p-img-final"> 
+            <div style="display: flex; justify-content: center; width: 100%;">
+                <img id="p-img-preview" src="" style="width: 90px; height: 90px; object-fit: cover; border-radius: 12px; display: none; margin-top: 10px; border: 2px solid var(--accent);">
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-primary" onclick="guardarPerfumeModal()" style="width:100%; padding:14px; font-size:15px; font-weight:900;">Guardar Perfume</button>
+  </div>
+</div>
+
+<div id="modal-imagen" class="modal-overlay">
+  <div class="modal-box">
+    <button class="btn-close-modal" onclick="document.getElementById('modal-imagen').style.display='none'">✖</button>
+    <h3 style="margin-top:0; color:var(--info); font-weight:900;">🖼️ Agregar Imagen al Catálogo</h3>
+    <p id="modal-imagen-nombre" style="font-weight:bold; margin-bottom:12px;"></p>
+    <input type="hidden" id="img-p-id">
+    <div class="form-group" style="margin-bottom:16px;">
+        <label>Pega el Link (URL) de la imagen</label>
+        <input type="text" id="p-img-url-rapido" class="user-input" placeholder="Ej: https://.../imagen.jpg">
+    </div>
+    <button class="btn-primary" onclick="guardarImagenPerfumeRapido()" style="width:100%; padding:12px; background:var(--info); font-weight:900;">💾 Guardar Imagen</button>
+  </div>
+</div>
+
+<div id="modal-sync" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+        <button class="btn-close-modal" onclick="document.getElementById('modal-sync').style.display='none'">✖</button>
+        <h3 style="font-weight:900; color:var(--accent);">📦 Importar Catálogo por Excel / CSV</h3>
+        <p style="color: var(--text-muted); font-size: 13px; font-weight:700; margin-bottom: 20px;">Sube tu archivo Excel o CSV (Columnas: Marca, Nombre, Stock, Costo, Precio).</p>
+        
+        <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" style="margin-bottom: 20px; background: var(--bg-input); padding: 12px; border-radius: 10px; border: 2px solid var(--border-color); width: 100%; color: white; font-weight:700;">
+        <br>
+        <button onclick="procesarArchivoExcel()" class="btn-primary" style="width: 100%; padding: 14px; font-weight: 900; font-size: 15px;">📥 Procesar y Cargar Inventario</button>
+    </div>
+</div>
+
+<div id="modal-recibo" class="modal-overlay">
+  <div style="display:flex; justify-content:center; align-items:center; width:100%; height:100%;">
+    <div class="recibo-ticket" style="position:relative; width:100%;">
+      <button id="btn-cerrar-recibo-modal" class="btn-close-modal" onclick="cerrarModalRecibo()">✖</button>
+      
+      <div id="ticket-recibo-captura" style="background:#ffffff; padding:24px; border-radius:14px; color:#1e293b;">
+          <div style="text-align:center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 12px; margin-bottom: 16px;">
+            <h2 style="margin:0; font-size:24px; font-weight:900; color:#070b14; letter-spacing:1.5px;">PERFUMA2</h2>
+            <div style="font-size:11px; color:#64748b; text-transform:uppercase; font-weight:800; margin-top:2px;">Boutique de Fragancias (oyamh95)</div>
+            <div id="recibo-meta" style="font-size:12px; color:#64748b; margin-top:6px; font-weight:700;">Fecha y Hora: -- | Compr. #--</div>
+          </div>
+          
+          <div style="font-size:13px; color:#334155; line-height:1.6; margin-bottom:16px; font-weight:700;">
+            <div style="display:flex; justify-content:space-between;"><span style="color:#64748b;">Cliente:</span> <strong id="r-cliente">--</strong></div>
+            <div style="display:flex; justify-content:space-between;"><span style="color:#64748b;">Medio:</span> <strong id="r-metodo">--</strong></div>
+            <div id="r-dir-container" style="display:none; justify-content:space-between; margin-top:2px;"><span style="color:#64748b;">Dirección:</span> <strong id="r-direccion" style="text-align:right;">--</strong></div>
+            
+            <div style="margin-top:14px; border-top:1px dashed #cbd5e1; padding-top:12px;">
+              <strong style="color:#070b14; display:block; margin-bottom:6px; font-size:14px;">Artículos:</strong>
+              <div id="r-productos-lista" style="font-size:12px; color:#475569; margin-bottom:6px;"></div>
+              <div id="r-delivery-container" style="display:none; justify-content:space-between; font-weight:800; font-size:12px; color:#3a86ff; border-top:1px dashed #cbd5e1; padding-top:6px;"><span>Delivery:</span> <span id="r-delivery">$0.00</span></div>
+            </div>
+          </div>
+          
+          <div style="background:#f8fafc; border: 2px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:5px;">
+            <div style="text-align:center; font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:900; margin-bottom:10px; letter-spacing:1px;">Resumen de Pago</div>
+            
+            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:16px; color:#070b14; margin-bottom: 2px;">
+                <span>Total Factura:</span> <span id="r-total">$0.00</span>
+            </div>
+            <div style="text-align:right; font-size:12px; color:#64748b; font-weight:800; margin-bottom:10px;" id="r-total-bs">Bs. 0.00</div>
+            
+            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px; color:#06d6a0; margin-bottom: 2px;">
+                <span>Total Abonado:</span> <span id="r-abonado">$0.00</span>
+            </div>
+            <div style="text-align:right; font-size:12px; color:#64748b; font-weight:800; margin-bottom:10px;" id="r-abonado-bs">Bs. 0.00</div>
+            
+            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px; color:#ff4d6d; margin-bottom: 2px;">
+                <span>Saldo Pendiente:</span> <span id="r-pendiente">$0.00</span>
+            </div>
+            <div style="text-align:right; font-size:12px; color:#64748b; font-weight:800;" id="r-pendiente-bs">Bs. 0.00</div>
+            
+            <div id="r-tasa-aplicada" style="text-align:center; font-size:10px; color:#94a3b8; font-weight:800; margin-top:14px; border-top: 1px solid #e2e8f0; padding-top:8px;">Tasa aplicada: 0.00 Bs</div>
+          </div>
+      </div>
+      
+      <div id="btn-container-recibo" style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+          <button class="btn-primary" onclick="ejecutarEnvioWhatsAppModal()" style="width:100%; background:#06d6a0; color:#070b14; padding:14px; font-size:15px; font-weight:900;">📸 Enviar Recibo al Cliente</button>
+          <button id="btn-enviar-delivery" class="btn-secondary" onclick="ejecutarEnvioMotorizadoWhatsApp()" style="width:100%; border-color:#3a86ff; color:#3a86ff; padding:14px; font-size:15px; font-weight:900; display:none;">🛵 Enviar Orden al Motorizado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-abono-cuota" class="modal-overlay">
+  <div class="modal-box">
+    <button class="btn-close-modal" onclick="cerrarModalAbono()">✖</button>
+    <h3 style="margin-top:0; color:var(--accent); font-weight:900;">💵 Registrar Abono / Cuota</h3>
+    <input type="hidden" id="abono-id">
+    <div id="abono-info" style="background:var(--bg-input); padding:14px; border-radius:10px; border:2px solid var(--border-color); font-size:14px; font-weight:800; margin-bottom:16px;"></div>
+    <div class="form-group" style="margin-bottom:14px;"><label>Monto a Abonar ($)</label><input type="number" step="0.01" id="abono-monto" class="user-input" style="font-size:18px; font-weight:900;"></div>
+    <div class="form-group" style="margin-bottom:20px;"><label>Medio</label><select id="abono-metodo" class="user-input"><option value="Pago Móvil">Pago Móvil</option><option value="Binance Pay (USDT)">Binance Pay (USDT)</option><option value="Zelle">Zelle</option><option value="Efectivo ($)">Efectivo ($)</option><option value="Transferencia Bs">Transferencia Bs</option></select></div>
+    <button class="btn-primary" onclick="guardarAbonoCuota()" style="width:100%; padding:14px; font-weight:900;">💾 Guardar Abono & Generar Recibo</button>
+  </div>
+</div>
+
+<datalist id="lista-productos-stock"></datalist>
+<datalist id="lista-productos-decants"></datalist>
+<datalist id="lista-productos-combos"></datalist>
+
+<script>
+const EMOJIS = {
+    estrella: decodeURIComponent('%E2%9C%A8'),
+    caja: decodeURIComponent('%F0%9F%93%A6'),
+    rombo: decodeURIComponent('%F0%9F%94%B9'),
+    dolar: decodeURIComponent('%F0%9F%92%B5'),
+    vzla: decodeURIComponent('%F0%9F%87%BB%F0%9F%87%AA'),
+    pin: decodeURIComponent('%F0%9F%93%8C'),
+    cel: decodeURIComponent('%F0%9F%93%B2'),
+    tubo: decodeURIComponent('%F0%9F%A7%AA'),
+    moto: decodeURIComponent('%F0%9F%9B%B5'),
+    check: decodeURIComponent('%E2%9C%85'),
+    alerta: decodeURIComponent('%E2%9A%A0%EF%B8%8F'),
+    carrito: decodeURIComponent('%F0%9F%9B%92'),
+    grafica: decodeURIComponent('%F0%9F%93%8A'),
+    calendario: decodeURIComponent('%F0%9F%93%85'),
+    bolsa: decodeURIComponent('%F0%9F%92%B0')
+};
+
+let chartVentasTopInstance = null;
+let chartPagosInstance = null;
+
+function safeArray(obj) {
+    if (!obj) return [];
+    if (Array.isArray(obj)) return obj.filter(x => x !== null && x !== undefined);
+    if (typeof obj === 'object') return Object.values(obj).filter(x => x !== null && x !== undefined);
+    return [];
+}
+
+function esProductoDecant(p) {
+    if (!p) return false;
+    if (p.isDecant === true) return true;
+    const nom = (p.nombre || '').toUpperCase();
+    const fmt = (p.formato || '').toUpperCase();
+    const notas = (p.notas || '').toUpperCase();
+    return nom.includes('[ABIERTO]') || fmt.includes('ABIERTO') || notas.includes('ABIERTO') || notas.includes('DECANTS') || notas.includes('MUESTRAS');
+}
+
+function descargarRespaldoJSON() {
+    const backupData = {
+        inventario: inventario,
+        ventas: ventas,
+        gastos: gastos,
+        pedidos: pedidosWeb,
+        tasaBCV: tasaBCV,
+        tasaUSDT: tasaUSDT,
+        tipoTasaActiva: tipoTasaActiva,
+        margenGlobalActual: margenGlobalActual,
+        numeroWhatsAppTienda: numeroWhatsAppTienda,
+        backupFecha: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Respaldo_PERFUMA2_${new Date().toLocaleDateString('es-VE').replace(/\//g, '-')}.json`;
+    a.click();
+    reproducirSonido('exito');
+    alert("✅ ¡Copia de seguridad descargada exitosamente en formato JSON!");
+}
+
+function restaurarRespaldoJSON(inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.inventario || data.ventas) {
+                if (confirm("⚠️ ¿Estás seguro de restaurar esta copia? Reemplazará los datos actuales por los del archivo de respaldo.")) {
+                    inventario = safeArray(data.inventario);
+                    ventas = safeArray(data.ventas);
+                    gastos = safeArray(data.gastos);
+                    pedidosWeb = safeArray(data.pedidos);
+                    tasaBCV = data.tasaBCV || tasaBCV;
+                    tasaUSDT = data.tasaUSDT || tasaUSDT;
+                    margenGlobalActual = data.margenGlobalActual || margenGlobalActual;
+                    guardarCambiosEnNube(false);
+                    renderTodo();
+                    reproducirSonido('exito');
+                    alert("✅ ¡Copia de seguridad restaurada exitosamente!");
+                }
+            } else {
+                alert("❌ El archivo seleccionado no contiene un formato de respaldo válido de PERFUMA2.");
+            }
+        } catch(err) {
+            alert("❌ Error al procesar el archivo JSON.");
+        }
+    };
+    reader.readAsText(file);
+    inputElement.value = '';
+}
+
+function solicitarPermisoNotificaciones() {
+    if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                reproducirSonido('exito');
+                alert("✅ ¡Notificaciones push activadas con éxito!");
+            } else {
+                alert("⚠️ Permiso de notificaciones denegado.");
+            }
+        });
+    } else {
+        alert("Tu navegador no soporta notificaciones nativas.");
+    }
+}
+
+function verificarBloqueoSeguridad() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('catalogo') === 'true') {
+        const loader = document.getElementById('loader-pantalla');
+        if(loader) loader.style.display = 'none';
+        return;
+    }
+    
+    const authTime = localStorage.getItem('perfuma2_auth_time');
+    const ahora = Date.now();
+    
+    setTimeout(() => {
+        const loader = document.getElementById('loader-pantalla');
+        if(loader && loader.style.display !== 'none') {
+            loader.style.opacity = '0';
+            setTimeout(() => { loader.style.display = 'none'; }, 800);
+            if (!authTime || (ahora - parseInt(authTime)) >= 86400000) {
+                document.getElementById('modal-login').style.display = 'flex';
+            } else {
+                document.getElementById('app-admin').style.display = 'block';
+            }
+        }
+    }, 3000);
+
+    if (authTime && (ahora - parseInt(authTime)) < 86400000) {
+        document.getElementById('modal-login').style.display = 'none';
+        document.getElementById('app-admin').style.display = 'block';
+    } else {
+        document.getElementById('modal-login').style.display = 'flex';
+    }
+}
+
+function verificarPIN() {
+    const pin = document.getElementById('input-pin-acceso').value;
+    if (pin === "2026") {
+        localStorage.setItem('perfuma2_auth_time', Date.now().toString());
+        document.getElementById('modal-login').style.display = 'none';
+        document.getElementById('app-admin').style.display = 'block';
+        reproducirSonido('exito');
+    } else {
+        reproducirSonido('alerta');
+        alert("❌ PIN Incorrecto.");
+    }
+}
+
+function reproducirSonido(tipo) {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+    
+    if (tipo === 'exito') {
+      osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.15);
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.6);
+      osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.6);
+    } else if (tipo === 'alerta') {
+      osc.type = 'square'; osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
+      osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.4);
+    } else if (tipo === 'click') {
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(700, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.15);
+      osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.15);
+    } else if (tipo === 'timbre') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, audioCtx.currentTime); 
+      osc.frequency.setValueAtTime(1600, audioCtx.currentTime + 0.2); 
+      osc.frequency.setValueAtTime(2000, audioCtx.currentTime + 0.4); 
+      gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8);
+      osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.8);
+    }
+  } catch (e) {}
+}
+
+setInterval(() => {
+  const el = document.getElementById('reloj-sistema');
+  if(el) el.innerText = new Date().toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short', hour12: true });
+}, 1000);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDtlsL07TtccsSk3qucLfLNIRtyN-WebhY",
+  authDomain: "perfuma2-1cb0d.firebaseapp.com",
+  databaseURL: "https://perfuma2-1cb0d-default-rtdb.firebaseio.com",
+  projectId: "perfuma2-1cb0d",
+  storageBucket: "perfuma2-1cb0d.firebasestorage.app"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const db = firebase.database();
+
+let inventario = [], ventas = [], gastos = [];
+let pedidosWeb = []; let pedidosPreviosLength = -1;
+let tasaBCV = 887.30, tasaUSDT = 950.00, tipoTasaActiva = 'bcv';
+let margenGlobalActual = 50;
+let numeroWhatsAppTienda = "584120551688"; 
+
+let carritoDetal = [], carritoMayor = [], carritoDecants = [];
+let carritoPublico = [];
+let nubeCargada = false, ventaActualRecibo = null;
+let primerCargaFirebase = true;
+
+const urlParams = new URLSearchParams(window.location.search);
+const isCatalogoPublico = urlParams.get('catalogo') === 'true';
+
+function obtenerTasaActiva() { return tipoTasaActiva === 'usdt' ? (tasaUSDT||1) : (tasaBCV||1); }
+
+async function obtenerTasasAutomaticas() {
+  if (isCatalogoPublico) return;
+  try {
+    const resBCV = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+    const dataBCV = await resBCV.json();
+    if (dataBCV && dataBCV.promedio) {
+      tasaBCV = parseFloat(dataBCV.promedio.toFixed(2));
+      document.getElementById('tasaBCVInput').value = tasaBCV;
+      reproducirSonido('exito');
+      alert(`✅ Tasa BCV actualizada correctamente: Bs. ${tasaBCV}`);
+    }
+    guardarCambiosEnNube(false); 
+    renderTodo(); 
+  } catch (err) {
+    alert("⚠️ No se pudo conectar con la API BCV. Verifique su internet o ingrésela manualmente.");
+  }
+}
+
+// Cargar y ejecutar código dinámico si existe en Firebase
+db.ref('perfuma2_version_control').on('value', (snapshot) => {
+  const vc = snapshot.val();
+  if (vc) {
+    if (vc.versionActual) {
+      const badge = document.getElementById('version-badge-flotante');
+      if (badge) badge.innerHTML = `🔔 ${vc.versionActual}`;
+    }
+    if (vc.codigoActual && typeof vc.codigoActual === 'string' && vc.codigoActual.trim().length > 0) {
+      try {
+        const scriptId = 'perfuma2-dynamic-code';
+        let oldScript = document.getElementById(scriptId);
+        if (oldScript) oldScript.remove();
+        const scriptEl = document.createElement('script');
+        scriptEl.id = scriptId;
+        scriptEl.text = vc.codigoActual;
+        document.body.appendChild(scriptEl);
+      } catch (err) {
+        console.error("Error al ejecutar parche dinámico:", err);
+      }
+    }
+  }
+});
+
+db.ref('perfuma2_data').on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    inventario = safeArray(data.inventario);
+    if(!isCatalogoPublico) {
+        ventas = safeArray(data.ventas);
+        gastos = safeArray(data.gastos);
+        pedidosWeb = safeArray(data.pedidos);
+        
+        if (pedidosPreviosLength !== -1 && pedidosWeb.length > pedidosPreviosLength) {
+            reproducirSonido('timbre');
+            if ("Notification" in window && Notification.permission === "granted") {
+                const ultimoPedido = pedidosWeb[pedidosWeb.length - 1];
+                const titulo = "🚨 ¡Nuevo Pedido Web!";
+                const opciones = {
+                    body: `${ultimoPedido.cliente || 'Un cliente'} ha solicitado un pedido por $${Number(ultimoPedido.total).toFixed(2)}. ¡Revisa el sistema!`,
+                    icon: "logo.jpg.jpg",
+                    tag: "perfuma2-pedido"
+                };
+                try {
+                    const notif = new Notification(titulo, opciones);
+                    notif.onclick = function() {
+                        window.focus();
+                        cambiarTab('pedidos');
+                    };
+                } catch(err) {}
+            }
+        }
+        pedidosPreviosLength = pedidosWeb.length;
+    }
+
+    margenGlobalActual = data.margenGlobalActual || 50;
+    tipoTasaActiva = data.tipoTasaActiva || 'bcv';
+    tasaBCV = data.tasaBCV || tasaBCV || 887.30; 
+    tasaUSDT = data.tasaUSDT || tasaUSDT || 950.00; 
+    numeroWhatsAppTienda = data.numeroWhatsAppTienda || "584120551688";
+    
+    if(!isCatalogoPublico) {
+        document.getElementById('tasaBCVInput').value = tasaBCV; 
+        document.getElementById('tasaUSDTInput').value = tasaUSDT;
+        document.getElementById('input-margen-global').value = margenGlobalActual;
+        if (document.getElementById('config-wa-tienda')) document.getElementById('config-wa-tienda').value = numeroWhatsAppTienda;
+        aplicarEstiloTasaActiva();
+    }
+  }
+  nubeCargada = true;
+  
+  if (isCatalogoPublico) {
+      const loader = document.getElementById('loader-pantalla');
+      if (loader) { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 500); }
+      iniciarCatalogoPublico();
+  } else {
+      document.getElementById('cloud-status').innerText = "● Sincronizado";
+      document.getElementById('cloud-status').style.color = "var(--success)";
+      const loader = document.getElementById('loader-pantalla');
+      if (loader && loader.style.display !== 'none') { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 800); }
+      renderTodo();
+      if (primerCargaFirebase) { primerCargaFirebase = false; }
+  }
+}, (error) => {
+  console.error("Firebase Error:", error);
+  if (error.code === "PERMISSION_DENIED") {
+      alert("⚠️ ERROR DE ACCESO EN FIREBASE: Las reglas de la base de datos están bloqueadas. Ve a la consola de Firebase > Realtime Database > Reglas y cambia a true.");
+  }
+});
+
+function guardarCambiosEnNube(esManual = false) {
+  if (!nubeCargada || isCatalogoPublico) return;
+  db.ref('perfuma2_data').set({ 
+      inventario, ventas, gastos, pedidos: pedidosWeb, tasaBCV, tasaUSDT, tipoTasaActiva, margenGlobalActual, numeroWhatsAppTienda, updatedAt: Date.now() 
+  });
+  if (esManual) { reproducirSonido('exito'); alert("✅ Guardado en la nube completado."); }
+}
+
+function alternarTipoTasa(sel) { reproducirSonido('click'); tipoTasaActiva = sel; aplicarEstiloTasaActiva(); renderTodo(); guardarCambiosEnNube(false); }
+function aplicarEstiloTasaActiva() {
+  const cBCV = document.getElementById('check-tasa-bcv'), cUSDT = document.getElementById('check-tasa-usdt');
+  const bBCV = document.getElementById('box-tasa-bcv'), bUSDT = document.getElementById('box-tasa-usdt');
+  if (tipoTasaActiva === 'bcv') { cBCV.checked=true; cUSDT.checked=false; bBCV.classList.add('activa'); bUSDT.classList.remove('activa'); } 
+  else { cBCV.checked=false; cUSDT.checked=true; bBCV.classList.remove('activa'); bUSDT.classList.add('activa'); }
+}
+function actualizarTasaManual(tipo) {
+  if (tipo === 'bcv') { let v = parseFloat(document.getElementById('tasaBCVInput').value); if(v > 0) tasaBCV = v; }
+  if (tipo === 'usdt') { let v = parseFloat(document.getElementById('tasaUSDTInput').value); if(v > 0) tasaUSDT = v; }
+  renderTodo(); guardarCambiosEnNube(false);
+}
+
+function resetearStockCero() {
+    if(confirm("⚠️ ¿Poner EL STOCK DE TODOS LOS PRODUCTOS EN CERO (0)?")) {
+        inventario.forEach(p => { if(p) p.stock = 0; });
+        guardarCambiosEnNube(false);
+        renderTodo();
+        reproducirSonido('exito');
+        alert("✅ Todo el stock reseteado a 0.");
+    }
+}
+
+function unificarStockDuplicado() {
+    let mapa = {};
+    inventario.forEach(p => {
+        if(!p || !p.nombre) return;
+        let key = p.nombre.trim().toUpperCase();
+        if(!mapa[key]) {
+            mapa[key] = { ...p };
+        } else {
+            mapa[key].stock = Number(mapa[key].stock) + Number(p.stock || 0);
+            if(!mapa[key].imgUrl && p.imgUrl) mapa[key].imgUrl = p.imgUrl;
+            if((!mapa[key].costo || mapa[key].costo <= 0) && p.costo > 0) mapa[key].costo = p.costo;
+            if((!mapa[key].precio || mapa[key].precio <= 0) && p.precio > 0) mapa[key].precio = p.precio;
+        }
+    });
+    inventario = Object.values(mapa);
+    guardarCambiosEnNube(false);
+    renderTodo();
+    reproducirSonido('exito');
+    alert("✅ ¡Inventario unificado correctamente!");
+}
+
+function copiarLinkCatalogo() {
+    const url = window.location.href.split('?')[0] + '?catalogo=true';
+    navigator.clipboard.writeText(url).then(() => {
+        reproducirSonido('exito');
+        alert("✅ Link del catálogo copiado.");
+    });
+}
+
+function generarCierreCaja() {
+    reproducirSonido('click');
+    const hoyStr = new Date().toLocaleDateString('es-VE');
+    let totalEntradasDia = 0; const ingresosPorMetodo = {};
+    ventas.forEach(v => {
+        if(!v) return;
+        const fechaVenta = (v.fecha || "").split(',')[0].trim();
+        if (fechaVenta === hoyStr && v.abonado > 0) {
+            totalEntradasDia += v.abonado; ingresosPorMetodo[v.metodo] = (ingresosPorMetodo[v.metodo] || 0) + v.abonado;
+        }
+    });
+    if (totalEntradasDia === 0) { reproducirSonido('alerta'); return alert("⚠️ No has registrado ventas ni abonos hoy."); }
+    let reporte = `${EMOJIS.grafica} *CIERRE DE CAJA PERFUMA2* ${EMOJIS.grafica}\n${EMOJIS.calendario} Fecha: ${hoyStr}\n\n*INGRESOS DEL DÍA:*\n`;
+    for (const [metodo, monto] of Object.entries(ingresosPorMetodo)) { reporte += `${EMOJIS.rombo} ${metodo}: $${monto.toFixed(2)}\n`; }
+    reporte += `\n${EMOJIS.bolsa} *TOTAL COBRADO HOY: $${totalEntradasDia.toFixed(2)}*`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(reporte)}`, '_blank');
+}
+
+function calcularCostoCombo() {
+    const p1Nom = document.getElementById('combo-prod1').value.trim(); const c1 = parseInt(document.getElementById('combo-cant1').value) || 1;
+    const p2Nom = document.getElementById('combo-prod2').value.trim(); const c2 = parseInt(document.getElementById('combo-cant2').value) || 1;
+    let costoTotal = 0; 
+    const p1 = inventario.find(x => x && x.nombre && x.nombre.toLowerCase() === p1Nom.toLowerCase()); if (p1) costoTotal += (Number(p1.costo) * c1);
+    if (p2Nom) { const p2 = inventario.find(x => x && x.nombre && x.nombre.toLowerCase() === p2Nom.toLowerCase()); if (p2) costoTotal += (Number(p2.costo) * c2); }
+    document.getElementById('combo-costo-base').value = `$${costoTotal.toFixed(2)}`;
+    const precioVenta = parseFloat(document.getElementById('combo-precio-venta').value) || 0;
+    const divRes = document.getElementById('combo-margen-display'); const divAdv = document.getElementById('combo-advertencia');
+    if (costoTotal > 0 && precioVenta > 0) {
+        const margen = (((precioVenta - costoTotal) / costoTotal) * 100).toFixed(1); divRes.innerText = `${margen}%`;
+        if (parseFloat(margen) < margenGlobalActual) { divRes.style.color = "var(--danger)"; divAdv.innerText = `⚠️ Ganando menos del global (${margenGlobalActual}%)`; divAdv.style.color = "var(--danger)"; } else { divRes.style.color = "var(--success)"; divAdv.innerText = `✅ Oferta rentable`; divAdv.style.color = "var(--success)"; }
+    } else { divRes.innerText = "0%"; divRes.style.color = "#fff"; divAdv.innerText = "Ingresa productos y precio de venta"; divAdv.innerText = "var(--text-muted)"; }
+}
+
+function guardarComboCatalogo() {
+    const nombreCombo = document.getElementById('combo-nombre').value.trim();
+    const p1Nom = document.getElementById('combo-prod1').value.trim();
+    const precioVenta = parseFloat(document.getElementById('combo-precio-venta').value) || 0;
+    const costoTotal = parseFloat(document.getElementById('combo-costo-base').value.replace('$','')) || 0;
+    if (!nombreCombo || !p1Nom || precioVenta <= 0 || costoTotal <= 0) { reproducirSonido('alerta'); return alert("Debes llenar el nombre, Producto 1 y Precio."); }
+    inventario.unshift({ id: 'combo_' + Date.now(), marca: 'COMBO/PROMO', nombre: nombreCombo.toUpperCase(), formato: 'Combo', stock: 1, costo: costoTotal, precio: precioVenta });
+    document.getElementById('combo-nombre').value = ''; document.getElementById('combo-prod1').value = ''; document.getElementById('combo-prod2').value = ''; document.getElementById('combo-precio-venta').value = ''; calcularCostoCombo();
+    guardarCambiosEnNube(false); renderTodo(); reproducirSonido('exito'); alert("✅ Combo guardado.");
+}
+
+function limpiarEnlaceImagen(inputElement) {
+    let val = inputElement.value.trim();
+    if (!val) { document.getElementById('p-img-final').value = ''; actualizarPreviewImagen(''); return; }
+    const srcMatch = val.match(/src\s*=\s*"([^"]+)"/i);
+    if (srcMatch && srcMatch[1]) { val = srcMatch[1]; } 
+    else {
+        const httpMatch = val.match(/(https?:\/\/[^\s"']+)/i);
+        if (httpMatch && httpMatch[1]) { val = httpMatch[1]; }
+    }
+    inputElement.value = val;
+    document.getElementById('p-img-final').value = val;
+    document.getElementById('p-img-file').value = '';
+    actualizarPreviewImagen(val);
+}
+
+function convertirImagenLocal(inputElement) {
+    const file = inputElement.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64String = e.target.result;
+            document.getElementById('p-img-final').value = base64String;
+            document.getElementById('p-img-url').value = '';
+            actualizarPreviewImagen(base64String);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function actualizarPreviewImagen(src) {
+    const preview = document.getElementById('p-img-preview');
+    if (src) { preview.src = src; preview.style.display = 'block'; } 
+    else { preview.style.display = 'none'; preview.src = ''; }
+}
+
+function buscarImagenGoogleModal() {
+    const marca = document.getElementById('p-marca').value.trim();
+    const nombre = document.getElementById('p-nombre').value.trim();
+    const query = encodeURIComponent(`perfume ${marca} ${nombre} 100ml`);
+    window.open(`https://www.google.com/search?tbm=isch&q=${query}`, '_blank');
+}
+
+function guardarImagenPerfumeRapido() {
+    const id = document.getElementById('img-p-id').value;
+    let url = document.getElementById('p-img-url-rapido').value.trim();
+    const pIndex = inventario.findIndex(x => x && x.id === id);
+    if(pIndex > -1) {
+        inventario[pIndex].imgUrl = url;
+        guardarCambiosEnNube(false);
+        renderTodo();
+        document.getElementById('modal-imagen').style.display = 'none';
+        reproducirSonido('exito');
+    }
+}
+
+function abrirModalImagen(id, nombre) {
+    document.getElementById('img-p-id').value = id;
+    document.getElementById('modal-imagen-nombre').innerText = nombre;
+    document.getElementById('p-img-url-rapido').value = '';
+    document.getElementById('modal-imagen').style.display = 'flex';
+}
+
+function abrirModalSync() { document.getElementById('modal-sync').style.display = 'flex'; }
+
+function procesarArchivoExcel() {
+    const fileInput = document.getElementById('excel-file-input');
+    if (!fileInput.files || fileInput.files.length === 0) {
+        return alert("⚠️ Por favor selecciona un archivo Excel (.xlsx, .xls) o CSV.");
+    }
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            if (jsonRows.length < 2) {
+                return alert("⚠️ El archivo está vacío o no tiene el formato correcto.");
+            }
+
+            let header = jsonRows[0].map(h => String(h).trim().toLowerCase());
+            let idxMarca = header.findIndex(h => h.includes('marca') || h.includes('proveedor'));
+            let idxNombre = header.findIndex(h => h.includes('nombre') || h.includes('perfume') || h.includes('inspiraci'));
+            let idxStock = header.findIndex(h => h.includes('stock') || h.includes('cantidad'));
+            let idxCosto = header.findIndex(h => h.includes('costo'));
+            let idxPrecio = header.findIndex(h => h.includes('precio') || h.includes('venta'));
+
+            if (idxNombre === -1) idxNombre = 1;
+            if (idxMarca === -1) idxMarca = 0;
+            if (idxStock === -1) idxStock = 2;
+            if (idxCosto === -1) idxCosto = 3;
+            if (idxPrecio === -1) idxPrecio = 4;
+
+            let countImportados = 0;
+            for (let i = 1; i < jsonRows.length; i++) {
+                let row = jsonRows[i];
+                if (!row || row.length === 0) continue;
+
+                let marca = row[idxMarca] ? String(row[idxMarca]).trim() : "MAYORISTA";
+                let nombre = row[idxNombre] ? String(row[idxNombre]).trim() : "";
+                if (!nombre) continue;
+
+                let stock = row[idxStock] !== undefined ? parseInt(row[idxStock]) || 0 : 0;
+                let costo = row[idxCosto] !== undefined ? parseFloat(row[idxCosto]) || 0 : 10;
+                let precio = row[idxPrecio] !== undefined ? parseFloat(row[idxPrecio]) || 0 : (costo * 1.5);
+
+                let existe = inventario.find(p => p && p.nombre && p.nombre.toLowerCase() === nombre.toLowerCase());
+                if (existe) {
+                    existe.stock = Number(existe.stock) + stock;
+                    existe.costo = costo > 0 ? costo : existe.costo;
+                    existe.precio = precio > 0 ? precio : existe.precio;
+                } else {
+                    inventario.push({
+                        id: 'exc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                        marca: marca.toUpperCase(),
+                        nombre: nombre.toUpperCase(),
+                        formato: "100ml",
+                        stock: stock,
+                        costo: costo,
+                        precio: precio,
+                        notas: "Importado de Excel",
+                        imgUrl: ""
+                    });
+                }
+                countImportados++;
+            }
+
+            guardarCambiosEnNube(false);
+            renderTodo();
+            document.getElementById('modal-sync').style.display = 'none';
+            reproducirSonido('exito');
+            alert(`✅ ¡Se importaron / actualizaron ${countImportados} productos correctamente desde el Excel!`);
+        } catch (err) {
+            console.error(err);
+            alert("❌ Error al procesar el archivo Excel. Asegúrate de que sea un archivo válido.");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function destaparPerfume(id) {
+    const p = inventario.find(x => x && x.id === id);
+    if (!p) return alert("Perfume no encontrado.");
+    if (Number(p.stock) <= 0) return alert("⚠️ No hay stock sellado para destapar.");
+    
+    let mlTotal = prompt(`¿Cuántos ML tiene la botella de "${p.nombre}" para destapar y vender en decants?`, "100");
+    if (!mlTotal || isNaN(mlTotal) || Number(mlTotal) <= 0) return;
+    mlTotal = parseInt(mlTotal);
+
+    p.stock = Number(p.stock) - 1;
+
+    let nombreDecant = p.nombre.startsWith('[ABIERTO]') ? p.nombre : `[ABIERTO] ${p.nombre}`;
+    let decantExistente = inventario.find(x => x && esProductoDecant(x) && (x.nombre.toLowerCase() === nombreDecant.toLowerCase() || x.nombre.toLowerCase() === p.nombre.toLowerCase()));
+    
+    if (decantExistente) {
+        decantExistente.stock = Number(decantExistente.stock) + mlTotal;
+        decantExistente.isDecant = true;
+        decantExistente.nombre = nombreDecant;
+    } else {
+        inventario.unshift({
+            id: 'dec_' + Date.now(),
+            marca: p.marca,
+            nombre: nombreDecant,
+            formato: `${mlTotal}ml (Abierto)`,
+            stock: mlTotal,
+            costo: parseFloat((Number(p.costo) / mlTotal).toFixed(4)),
+            precio: parseFloat((Number(p.precio) / mlTotal).toFixed(2)),
+            isDecant: true,
+            imgUrl: p.imgUrl || '',
+            notas: 'Frasco abierto para decants'
+        });
+    }
+    guardarCambiosEnNube(false);
+    renderTodo();
+    reproducirSonido('exito');
+    alert(`✅ ¡Frasco destapado con éxito! Se añadieron ${mlTotal} ML al inventario de decants.`);
+}
+
+function destaparDesdeDecantsTab() {
+    const sellados = inventario.filter(p => p && !esProductoDecant(p) && Number(p.stock) > 0);
+    if (sellados.length === 0) return alert("⚠️ No tienes perfumes sellados con stock para destapar.");
+    let lista = sellados.map((p, idx) => `${idx + 1}. ${p.nombre} (Stock: ${p.stock})`).join('\n');
+    let resp = prompt(`Elige el NÚMERO del perfume sellado que deseas destapar:\n\n${lista}`);
+    if (!resp) return;
+    let idx = parseInt(resp) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= sellados.length) return alert("⚠️ Selección no válida.");
+    destaparPerfume(sellados[idx].id);
+}
+
+function toggleDeliveryPanel(tipo) {
+    const chk = document.getElementById(tipo === 'detal' ? 'v-usa-delivery' : 'm-usa-delivery');
+    const panel = document.getElementById(tipo === 'detal' ? 'v-delivery-panel' : 'm-delivery-panel');
+    if (chk && panel) {
+        panel.style.display = chk.checked ? 'grid' : 'none';
+    }
+    recalcularTotalesVenta(tipo === 'detal' ? 'detal' : 'mayor');
+}
+
+function renderInventario() {
+  try {
+      const busq = (document.getElementById('buscar-inv').value||'').toLowerCase(); 
+      const crit = document.getElementById('orden-stock').value; 
+      const tbody = document.getElementById('tbody-inventario'); 
+      const tasa = obtenerTasaActiva();
+      
+      let flt = inventario.filter(i=> i && i.nombre && i.nombre.toLowerCase().includes(busq));
+      
+      if(crit==='mayor') { flt.sort((a,b)=>Number(b.stock)-Number(a.stock)); } 
+      else if(crit==='menor') { flt.sort((a,b)=>Number(a.stock)-Number(b.stock)); } 
+      else { flt.sort((a,b)=>a.nombre.localeCompare(b.nombre)); }
+      
+      if (flt.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Inventario vacío</td></tr>`; return;}
+      
+      tbody.innerHTML = flt.map(i => {
+        const esDec = esProductoDecant(i);
+        let st = Number(i.stock)<=0?`<span style="color:var(--text-muted);">0</span>`:Number(i.stock)>2?`<span style="color:var(--success); font-weight:900;">${i.stock}</span>`:`<span style="color:var(--warning); font-weight:900;">${i.stock}</span>`;
+        let nombreSeguro = i.nombre.replace(/"/g, '').replace(/'/g, '');
+        let btnImagenHtml = `<span style="cursor:pointer; font-size:16px; margin-right:6px;" onclick="abrirModalImagen('${i.id}', \`${nombreSeguro}\`)" title="Agregar Link">🖼️</span>`;
+        let btnDestapar = !esDec ? `<button class="btn-secondary" onclick="destaparPerfume('${i.id}')" style="background:rgba(0,242,214,0.15); color:var(--accent); border:1px solid rgba(0,242,214,0.4); padding:6px 10px;" title="Destapar para Decants">💧</button>` : '';
+        
+        let imgHTML = i.imgUrl ? `<img src="${i.imgUrl}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;">` : `<div style="width: 45px; height: 45px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">${esDec ? '🧪' : '🧴'}</div>`;
+        let notasHTML = `<div style="font-size: 10px; color: var(--warning); margin-top: 4px; font-weight:800;">🌿 ${i.notas || 'Sin notas'}</div>`;
+        
+        if (esDec) {
+            let badge = `<br><span class="badge badge-decant">MUESTRAS ABIERTO</span>`; 
+            st = `${i.stock} ML`;
+            return `<tr><td>${i.marca}</td><td style="display:flex; gap:10px; align-items:center;">${imgHTML} <div>${btnImagenHtml} <b style="color:var(--warning);">${i.nombre}</b>${badge}${notasHTML}</div></td><td><b style="color:var(--warning);">${st}</b></td><td style="color:var(--text-muted);">$${Number(i.costo).toFixed(3)}/ml</td><td style="color:var(--warning); font-weight:900;">$${Number(i.precio).toFixed(2)}/ml</td><td style="color:var(--accent); font-weight:900;">Bs. ${(Number(i.precio)*tasa).toFixed(2)}/ml</td><td><button class="btn-edit" onclick="editarPerfume('${i.id}')" style="background:rgba(255,183,3,0.2); color:var(--warning); border:1px solid rgba(255,183,3,0.4);">✏️</button> <button class="btn-danger" onclick="eliminarPerfume('${i.id}')">🗑️</button></td></tr>`;
+        } else {
+            return `<tr><td>${i.marca}</td><td style="display:flex; gap:10px; align-items:center;">${imgHTML} <div>${btnImagenHtml} <b style="color:#fff;">${i.nombre}</b>${notasHTML}</div></td><td>${st}</td><td style="color:var(--text-muted);">$${Number(i.costo).toFixed(2)}</td><td style="color:var(--warning); font-weight:900;">$${Number(i.precio).toFixed(2)}</td><td style="color:var(--accent); font-weight:900;">Bs. ${(Number(i.precio)*tasa).toFixed(2)}</td><td>${btnDestapar} <button class="btn-edit" onclick="editarPerfume('${i.id}')" style="background:rgba(255,183,3,0.2); color:var(--warning); border:1px solid rgba(255,183,3,0.4);">✏️</button> <button class="btn-danger" onclick="eliminarPerfume('${i.id}')">🗑️</button></td></tr>`;
+        }
+      }).join('');
+  } catch(e) {}
+}
+
+function renderHistorialesVentas() {
+  try {
+      const renderFila = (v) => {
+        if(!v) return '';
+        const pend = Math.max(0, Number(v.total) - Number(v.abonado)); 
+        let prodHTML = v.productoResumen || 'Producto';
+        const tdTotal = `<b style="color:#fff;">$${Number(v.total).toFixed(2)}</b>`;
+        const tdAbono = `<span style="color:var(--success);">$${Number(v.abonado).toFixed(2)}</span>`;
+        const tdPend = `<span style="color:var(--danger);">$${pend.toFixed(2)}</span>`;
+        let btnAbonar = pend > 0.01 ? `<button onclick="abrirModalAbono('${v.id}')" class="btn-warning" style="padding:4px 8px; font-size:10px; margin-right:4px;">+ Abono</button>` : '';
+        let btnDeliveryMoto = (v.deliveryCosto && v.deliveryCosto > 0) ? `<button onclick="ejecutarEnvioMotorizadoWhatsApp('${v.id}')" class="btn-primary" style="padding:4px 8px; font-size:10px; margin-right:4px; background:#3a86ff; color:#fff;" title="Enviar a Motorizado">🛵</button>` : '';
+        return `<tr><td>${v.fecha}</td><td><b>${v.cliente}</b></td><td style="font-size:11px;">${prodHTML}</td><td>${tdTotal}</td><td>${tdAbono}</td><td>${tdPend}</td><td>${v.plan || 'Contado'}${v.plazoDias ? ` (${v.plazoDias}d)` : ''}</td><td>${btnDeliveryMoto}${btnAbonar}<button onclick="verReciboExistente('${v.id}')" class="btn-wa">📲</button> <button onclick="eliminarVenta('${v.id}')" class="btn-danger">🗑️</button></td></tr>`;
+      };
+      const vMayor = [], vDecant = [], vDetal = [];
+      ventas.forEach(v => {
+          if(!v) return;
+          if (v.tipoVenta === 'mayor' || v.plan === 'Al Mayor') { vMayor.push(v); } 
+          else if (v.tipoVenta === 'decant') { vDecant.push(v); } 
+          else { vDetal.push(v); }
+      });
+      document.getElementById('tbody-ventas-detal').innerHTML = vDetal.map(renderFila).join('') || "<tr><td colspan='8' style='text-align:center;'>Sin ventas</td></tr>";
+      document.getElementById('tbody-ventas-mayor').innerHTML = vMayor.map(renderFila).join('') || "<tr><td colspan='8' style='text-align:center;'>Sin ventas</td></tr>";
+      document.getElementById('tbody-ventas-decants').innerHTML = vDecant.map(renderFila).join('') || "<tr><td colspan='8' style='text-align:center;'>Sin ventas</td></tr>";
+  } catch(e){}
+}
+
+function eliminarVenta(id) { if (confirm("¿Eliminar Venta?")) { ventas = ventas.filter(v=>v && v.id!==id); guardarCambiosEnNube(false); renderTodo(); } }
+
+function renderClientes() { 
+    try { 
+        document.getElementById('tbody-clientes').innerHTML = ventas.map(v=>`<tr><td><b>${v.cliente}</b></td><td>${v.telefono || 'N/A'}</td><td>${v.productoResumen || '-'}</td><td>$${Number(v.total).toFixed(2)}</td><td style="color:var(--success);">$${Number(v.abonado).toFixed(2)}</td><td style="color:var(--danger);">$${Math.max(0, Number(v.total) - Number(v.abonado)).toFixed(2)}</td><td>${v.plan || 'Contado'}</td><td><button onclick="verReciboExistente('${v.id}')" class="btn-wa">📲</button> <button onclick="eliminarVenta('${v.id}')" class="btn-danger">🗑️</button></td></tr>`).join('') || "<tr><td colspan='8' style='text-align:center;'>Sin clientes registrados</td></tr>"; 
+    } catch(e){} 
+}
+
+function renderGastos() { try{ document.getElementById('tbody-gastos').innerHTML = gastos.map(g=>`<tr><td>${g.fecha}</td><td><b>${g.concepto}</b></td><td style="color:var(--danger);">$${Number(g.monto).toFixed(2)}</td><td><button onclick="eliminarGasto('${g.id}')" class="btn-danger">🗑️</button></td></tr>`).join('') || ""; }catch(e){} }
+function agregarGasto() { const c = document.getElementById('g-concepto').value.trim(), m = parseFloat(document.getElementById('g-monto').value); if (c && m > 0) { gastos.unshift({ id: 'g_'+Date.now(), fecha: new Date().toLocaleString(), concepto: c, monto: m }); guardarCambiosEnNube(false); renderTodo(); document.getElementById('g-concepto').value=''; document.getElementById('g-monto').value=''; } }
+function eliminarGasto(id){ gastos = gastos.filter(x=>x && x.id!==id); guardarCambiosEnNube(false); renderTodo(); }
+
+function aplicarMargenGlobal() {
+  const m = parseFloat(document.getElementById('input-margen-global').value);
+  if(isNaN(m)) return alert("⚠️ Ingresa un porcentaje válido.");
+  margenGlobalActual = m;
+  let count = 0;
+  inventario.forEach(i => { 
+      if(i && Number(i.costo) > 0 && !esProductoDecant(i)) {
+          i.precio = parseFloat((Number(i.costo) * (1 + (m / 100))).toFixed(2));
+          count++;
+      }
+  });
+  guardarCambiosEnNube(true); 
+  renderTodo(); 
+  reproducirSonido('exito');
+  alert(`✅ Margen del ${m}% aplicado a ${count} perfumes sellados.`);
+}
+
+function recalcularPrecioDesdeMargen() { const c = parseFloat(document.getElementById('p-costo').value)||0, m = parseFloat(document.getElementById('p-margen').value)||0; document.getElementById('p-precio').value = (c + (c*(m/100))).toFixed(2); }
+function recalcularMargenDesdePrecio() { const c = parseFloat(document.getElementById('p-costo').value)||0, p = parseFloat(document.getElementById('p-precio').value)||0; if(c>0) document.getElementById('p-margen').value = (((p-c)/c)*100).toFixed(0); }
+
+function editarPerfume(id) { 
+    const i = inventario.find(p=>p && p.id===id); if(!i) return; 
+    document.getElementById('p-id').value = id; 
+    document.getElementById('p-marca').value = i.marca || ''; 
+    document.getElementById('p-nombre').value = i.nombre || ''; 
+    document.getElementById('p-formato').value = i.formato || '100ml'; 
+    document.getElementById('p-stock').value = i.stock !== undefined ? i.stock : 0; 
+    document.getElementById('p-costo').value = i.costo !== undefined ? i.costo : 15.00; 
+    document.getElementById('p-precio').value = i.precio !== undefined ? i.precio : 22.50; 
+    document.getElementById('p-notas').value = i.notas || ''; 
+    document.getElementById('p-img-final').value = i.imgUrl || ''; 
+    actualizarPreviewImagen(i.imgUrl || '');
+    document.getElementById('modal-perfume').style.display='flex'; 
+}
+
+function eliminarPerfume(id) { if (confirm("¿Eliminar?")) { inventario = inventario.filter(p=>p && p.id!==id); guardarCambiosEnNube(false); renderTodo(); } }
+
+function guardarPerfumeModal() {
+  const id = document.getElementById('p-id').value;
+  const m = document.getElementById('p-marca').value || 'MAYORISTA';
+  const n = document.getElementById('p-nombre').value;
+  const f = document.getElementById('p-formato').value || '100ml';
+  const s = parseInt(document.getElementById('p-stock').value) || 0;
+  const c = parseFloat(document.getElementById('p-costo').value) || 0;
+  const p = parseFloat(document.getElementById('p-precio').value) || 0;
+  const nt = document.getElementById('p-notas').value.trim();
+  const img = document.getElementById('p-img-final').value.trim();
+  if (!n) return alert("⚠️ El nombre del producto es obligatorio.");
+
+  if (id) { 
+      const x = inventario.findIndex(a=>a && a.id===id); 
+      if(x > -1) {
+          inventario[x].marca = m;
+          inventario[x].nombre = n.toUpperCase();
+          inventario[x].formato = f;
+          inventario[x].stock = s;
+          inventario[x].costo = c;
+          inventario[x].precio = p;
+          inventario[x].notas = nt;
+          if(img) inventario[x].imgUrl = img;
+      }
+  } else { 
+      inventario.unshift({
+          id:'p_'+Date.now(), 
+          marca:m, 
+          nombre:n.toUpperCase(), 
+          formato:f, 
+          stock:s, 
+          costo:c, 
+          precio:p, 
+          notas: nt, 
+          imgUrl: img
+      }); 
+  }
+  cerrarModalPerfume(); 
+  guardarCambiosEnNube(false); 
+  renderTodo();
+  reproducirSonido('exito');
+}
+
+function seleccionarDecantDesdeSelect() {
+    const id = document.getElementById('dec-producto-select').value;
+    if (!id) return;
+    const p = inventario.find(x => x && x.id === id);
+    if (p) {
+        document.getElementById('dec-producto-input').value = p.nombre;
+        sugerirPrecioDecant();
+    }
+}
+
+function sugerirPrecioDecant() {
+    const pNom = document.getElementById('dec-producto-input').value.trim(); 
+    const ml = parseInt(document.getElementById('dec-ml').value) || 10;
+    const costoVial = parseFloat(document.getElementById('dec-costo-vial').value) || 0.80;
+    
+    const p = inventario.find(x => esProductoDecant(x) && x.nombre && x.nombre.toLowerCase() === pNom.toLowerCase()) 
+           || inventario.find(x => x && x.nombre && x.nombre.toLowerCase() === pNom.toLowerCase());
+    
+    const divSugerencia = document.getElementById('dec-sugerencia-txt');
+    
+    if (p) {
+        const sel = document.getElementById('dec-producto-select');
+        if (sel && sel.value !== p.id) sel.value = p.id;
+
+        let costoLiquidoPorMl = esProductoDecant(p) ? Number(p.costo) : (Number(p.costo) / 100);
+        let costoTotalMuestra = (costoLiquidoPorMl * ml) + costoVial;
+        let precioSugerido = esProductoDecant(p) ? (Number(p.precio) * ml) : ((Number(p.precio) / 100) * ml);
+        if(precioSugerido <= 0) precioSugerido = costoTotalMuestra * 2;
+        
+        document.getElementById('dec-precio').value = precioSugerido.toFixed(2);
+        if (divSugerencia) {
+            divSugerencia.innerHTML = `💡 Frasco: <b>${p.nombre}</b> | Stock Disponible: <b style="color:var(--warning);">${p.stock} ML</b> | Costo base: $${costoTotalMuestra.toFixed(2)}`;
+        }
+    } else {
+        if (divSugerencia) divSugerencia.innerHTML = "";
+    }
+    recalcularTotalesVentaDecant();
+}
+
+function agregarAlCarritoDecant() {
+  const el = document.getElementById('dec-producto-input');
+  const ml = parseInt(document.getElementById('dec-ml').value) || 10;
+  const cEl = document.getElementById('dec-cantidad');
+  const pPrec = document.getElementById('dec-precio');
+  const pNom = el.value.trim();
+  
+  const p = inventario.find(x => esProductoDecant(x) && x.nombre && x.nombre.toLowerCase() === pNom.toLowerCase()) 
+         || inventario.find(x => x && x.nombre && x.nombre.toLowerCase() === pNom.toLowerCase());
+         
+  if (!p) return alert("⚠️ Selecciona un frasco abierto válido de la lista.");
+  
+  let cant = parseInt(cEl.value) || 1;
+  let prec = parseFloat(pPrec.value) || 0;
+  let mlTotalRequerido = ml * cant;
+
+  if (Number(p.stock) < mlTotalRequerido) {
+      return alert(`⚠️ Stock insuficiente en el frasco abierto. Tienes ${p.stock} ML disponibles y requieres ${mlTotalRequerido} ML.`);
+  }
+  
+  carritoDecants.push({ 
+      productoId: p.id, 
+      nombre: `Muestra ${ml}ml - ` + p.nombre.replace('[ABIERTO] ', ''), 
+      precio: prec, 
+      cantidad: cant, 
+      subtotal: prec * cant, 
+      mlDeducir: mlTotalRequerido 
+  });
+  renderCarritoDecant();
+  el.value = '';
+  document.getElementById('dec-producto-select').value = '';
+  document.getElementById('dec-sugerencia-txt').innerHTML = '';
+}
+
+function renderCarritoDecant() {
+  document.getElementById('dec-items-carrito-lista').innerHTML = carritoDecants.map((i,idx) => `<div class="carrito-item"><span>${i.cantidad}x ${i.nombre} ($${i.subtotal.toFixed(2)})</span><button onclick="carritoDecants.splice(${idx},1);renderCarritoDecant()" class="btn-danger" style="padding:2px 6px;">X</button></div>`).join('') || "<div style='color:var(--text-muted);'>Carrito de decants vacío.</div>";
+  recalcularTotalesVentaDecant();
+}
+
+function recalcularTotalesVentaDecant() {
+  const tot = carritoDecants.reduce((s,i)=>s+i.subtotal,0);
+  const abonoInput = parseFloat(document.getElementById('dec-abono').value) || 0;
+  const plan = document.getElementById('dec-plan').value;
+  const usaDel = document.getElementById('dec-usa-delivery').checked;
+  const costoDel = usaDel ? (parseFloat(document.getElementById('dec-delivery').value) || 0) : 0;
+  
+  const totalConDel = tot + costoDel;
+  let abonado = plan === 'Contado' ? totalConDel : Math.min(abonoInput, totalConDel);
+  let restante = Math.max(0, totalConDel - abonado);
+  
+  document.getElementById('dec-resumen-abono').innerText = `Total: $${totalConDel.toFixed(2)} | Abonado: $${abonado.toFixed(2)}`;
+  document.getElementById('dec-resumen-restante').innerText = `Saldo Restante: $${restante.toFixed(2)}`;
+}
+
+function registrarVentaDecant() {
+  const cli = document.getElementById('dec-cliente').value.trim();
+  if (!cli || carritoDecants.length === 0) return alert("Faltan datos de cliente o artículos en decants.");
+  
+  const tot = carritoDecants.reduce((s,i)=>s+i.subtotal,0);
+  const abonoInput = parseFloat(document.getElementById('dec-abono').value) || 0;
+  const plan = document.getElementById('dec-plan').value;
+  const plazoDias = parseInt(document.getElementById('dec-plazo-dias').value) || 10;
+  const usaDel = document.getElementById('dec-usa-delivery').checked;
+  const costoDel = usaDel ? (parseFloat(document.getElementById('dec-delivery').value) || 0) : 0;
+  const motorizadoNom = usaDel ? (document.getElementById('dec-motorizado-nombre').value.trim() || 'Motorizado') : '';
+  const motorizadoTel = usaDel ? (document.getElementById('dec-motorizado-telefono').value.trim() || '') : '';
+
+  const totalConDel = tot + costoDel;
+  let abonado = plan === 'Contado' ? totalConDel : Math.min(abonoInput, totalConDel);
+
+  carritoDecants.forEach(item => {
+      let pInv = inventario.find(x => x && x.id === item.productoId);
+      if (pInv) {
+          pInv.stock = Math.max(0, Number(pInv.stock) - item.mlDeducir);
+      }
+  });
+
+  const v = { 
+      id: 'v_'+Date.now(), 
+      fecha: new Date().toLocaleString(), 
+      cliente: cli, 
+      telefono: document.getElementById('dec-telefono').value, 
+      direccion: document.getElementById('dec-direccion').value,
+      deliveryCosto: costoDel,
+      motorizadoNombre: motorizadoNom,
+      motorizadoTelefono: motorizadoTel,
+      plazoDias: plazoDias,
+      productos: [...carritoDecants], 
+      productoResumen: carritoDecants.map(i=>`${i.cantidad}x ${i.nombre}`).join(', '), 
+      total: totalConDel, 
+      abonado: abonado, 
+      plan: plan, 
+      metodo: document.getElementById('dec-metodo').value, 
+      tipoVenta: 'decant' 
+  };
+  
+  ventas.unshift(v); 
+  ventaActualRecibo = v; 
+  carritoDecants = [];
+  guardarCambiosEnNube(false); 
+  renderTodo(); 
+  mostrarModalRecibo(v);
+}
+
+function agregarItemAlCarrito(t) {
+  const el = document.getElementById(t==='detal'?'v-producto-input':'m-producto-input'), cEl = document.getElementById(t==='detal'?'v-cantidad-item':'m-cantidad-item');
+  const p = inventario.find(x => x && x.nombre && x.nombre.toLowerCase() === el.value.trim().toLowerCase());
+  if (!p) return alert("Selecciona un perfume válido en stock.");
+  const prec = Number(p.precio), cant = parseInt(cEl.value) || 1, carr = t === 'detal' ? carritoDetal : carritoMayor;
+  carr.push({ productoId: p.id, nombre: p.nombre, precio: prec, cantidad: cant, subtotal: prec*cant });
+  renderCarrito(t);
+}
+
+function renderCarrito(t) {
+  const carr = t === 'detal' ? carritoDetal : carritoMayor;
+  document.getElementById(t==='detal'?'v-items-carrito-lista':'m-items-carrito-lista').innerHTML = carr.map((i,idx)=>`<div class="carrito-item"><span>${i.cantidad}x ${i.nombre} ($${i.subtotal.toFixed(2)})</span><button onclick="${t==='detal'?'carritoDetal':'carritoMayor'}.splice(${idx},1);renderCarrito('${t}')" class="btn-danger" style="padding:2px 6px;">X</button></div>`).join('') || "<div style='color:var(--text-muted);'>Vacío</div>";
+  recalcularTotalesVenta(t);
+}
+
+function recalcularTotalesVenta(t) {
+  const carr = t === 'detal' ? carritoDetal : carritoMayor;
+  const tot = carr.reduce((s,i)=>s+i.subtotal,0);
+  
+  if(t==='detal') {
+      const plan = document.getElementById('v-plan').value;
+      const abonoInput = parseFloat(document.getElementById('v-abono').value) || 0;
+      const usaDel = document.getElementById('v-usa-delivery').checked;
+      const costoDel = usaDel ? (parseFloat(document.getElementById('v-delivery').value) || 0) : 0;
+      
+      const totalConDel = tot + costoDel;
+      let abonado = plan === 'Contado' ? totalConDel : Math.min(abonoInput, totalConDel);
+      let restante = Math.max(0, totalConDel - abonado);
+      
+      document.getElementById('v-resumen-abono').innerText = `Total: $${totalConDel.toFixed(2)} | Abonado: $${abonado.toFixed(2)}`;
+      document.getElementById('v-resumen-restante').innerText = `Saldo Restante: $${restante.toFixed(2)}`;
+  } else {
+      let margenM = parseFloat(document.getElementById('m-margen').value) || 15;
+      let totMayor = tot * (1 + (margenM / 100));
+      const usaDel = document.getElementById('m-usa-delivery').checked;
+      const costoDel = usaDel ? (parseFloat(document.getElementById('m-delivery').value) || 0) : 0;
+      document.getElementById('m-resumen-total').innerText = `Total al Mayor: $${(totMayor + costoDel).toFixed(2)}`;
+  }
+}
+
+function registrarVenta(t) {
+  const isM = (t === 'mayor'), carr = isM ? carritoMayor : carritoDetal, pre = isM ? 'm' : 'v', cli = document.getElementById(pre+'-cliente').value.trim();
+  if (!cli || carr.length === 0) return alert("Faltan datos de cliente o artículos en el carrito.");
+  
+  let tot = carr.reduce((s,i)=>s+i.subtotal,0);
+  if(isM) {
+      let margenM = parseFloat(document.getElementById('m-margen').value) || 15;
+      tot = tot * (1 + (margenM / 100));
+  }
+  
+  const usaDel = document.getElementById(pre+'-usa-delivery').checked;
+  const costoDel = usaDel ? (parseFloat(document.getElementById(pre+'-delivery').value) || 0) : 0;
+  const motorizadoNom = usaDel ? (document.getElementById(pre+'-motorizado-nombre').value.trim() || 'Motorizado') : '';
+  const motorizadoTel = usaDel ? (document.getElementById(pre+'-motorizado-telefono').value.trim() || '') : '';
+  const plazoDias = !isM ? (parseInt(document.getElementById('v-plazo-dias').value) || 10) : 10;
+  const totalConDel = tot + costoDel;
+
+  const abonoInput = isM ? totalConDel : (parseFloat(document.getElementById('v-abono').value) || 0);
+  const plan = isM ? 'Al Mayor' : document.getElementById('v-plan').value;
+  let abonado = plan === 'Contado' || isM ? totalConDel : Math.min(abonoInput, totalConDel);
+
+  carr.forEach(item => {
+      let pInv = inventario.find(x => x && x.id === item.productoId);
+      if (pInv) {
+          pInv.stock = Math.max(0, Number(pInv.stock) - item.cantidad);
+      }
+  });
+
+  const v = { 
+      id: 'v_'+Date.now(), 
+      fecha: new Date().toLocaleString(), 
+      cliente: cli, 
+      telefono: document.getElementById(pre+'-telefono').value, 
+      direccion: document.getElementById(pre+'-direccion').value,
+      deliveryCosto: costoDel,
+      motorizadoNombre: motorizadoNom,
+      motorizadoTelefono: motorizadoTel,
+      plazoDias: plazoDias,
+      productos: [...carr], 
+      productoResumen: carr.map(i=>`${i.cantidad}x ${i.nombre}`).join(', '), 
+      total: totalConDel, 
+      abonado: abonado, 
+      plan: plan, 
+      metodo: document.getElementById(pre+'-metodo').value, 
+      tipoVenta: t 
+  };
+  
+  ventas.unshift(v); 
+  ventaActualRecibo = v; 
+  if(isM) carritoMayor = []; else carritoDetal = [];
+  guardarCambiosEnNube(false); 
+  renderTodo(); 
+  mostrarModalRecibo(v);
+}
+
+function abrirModalAbono(id) {
+    const v = ventas.find(x => x && x.id === id);
+    if (!v) return;
+    document.getElementById('abono-id').value = id;
+    let pendiente = Math.max(0, Number(v.total) - Number(v.abonado));
+    document.getElementById('abono-info').innerText = `Cliente: ${v.cliente} | Saldo Pendiente: $${pendiente.toFixed(2)}`;
+    document.getElementById('abono-monto').value = pendiente.toFixed(2);
+    document.getElementById('modal-abono-cuota').style.display = 'flex';
+}
+
+function cerrarModalAbono() { document.getElementById('modal-abono-cuota').style.display = 'none'; }
+
+function guardarAbonoCuota() {
+    const id = document.getElementById('abono-id').value;
+    const monto = parseFloat(document.getElementById('abono-monto').value) || 0;
+    const v = ventas.find(x => x && x.id === id);
+    if (v && monto > 0) {
+        v.abonado = Math.min(Number(v.total), Number(v.abonado) + monto);
+        v.historialAbonos = v.historialAbonos || [];
+        v.historialAbonos.push({
+            fecha: new Date().toLocaleString(),
+            monto: monto,
+            metodo: document.getElementById('abono-metodo').value
+        });
+        
+        ventaActualRecibo = v; 
+        guardarCambiosEnNube(false);
+        renderTodo();
+        cerrarModalAbono();
+        reproducirSonido('exito');
+        mostrarModalRecibo(v); 
+    }
+}
+
+function generarCotizacionMayor() { alert("Cotización generada"); }
+
+function cambiarTab(id, b) {
+    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active')); 
+    document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); 
+    document.getElementById('tab-'+id).classList.add('active'); 
+    if(b) b.classList.add('active');
+    renderTodo();
+}
+
+function abrirModalPerfume() { 
+    document.getElementById('p-id').value=''; 
+    document.getElementById('p-nombre').value=''; 
+    document.getElementById('p-stock').value='0';
+    document.getElementById('p-costo').value='15.00';
+    document.getElementById('p-precio').value='22.50';
+    document.getElementById('p-img-final').value='';
+    actualizarPreviewImagen('');
+    document.getElementById('modal-perfume').style.display = 'flex'; 
+}
+function cerrarModalPerfume() { document.getElementById('modal-perfume').style.display = 'none'; }
+
+function mostrarModalRecibo(v) { 
+  ventaActualRecibo = v; 
+  const tasa = obtenerTasaActiva();
+  document.getElementById('r-cliente').innerText = v.cliente; 
+  document.getElementById('r-metodo').innerText = v.metodo; 
+  document.getElementById('recibo-meta').innerText = `Fecha y Hora: ${v.fecha} | Compr. #${v.id.substring(4)}`;
+  document.getElementById('r-total').innerText = "$" + Number(v.total).toFixed(2);
+  document.getElementById('r-total-bs').innerText = "Bs. " + (Number(v.total) * tasa).toFixed(2);
+  document.getElementById('r-abonado').innerText = "$" + Number(v.abonado).toFixed(2);
+  document.getElementById('r-abonado-bs').innerText = "Bs. " + (Number(v.abonado) * tasa).toFixed(2);
+  let pendiente = Math.max(0, Number(v.total) - Number(v.abonado));
+  document.getElementById('r-pendiente').innerText = "$" + pendiente.toFixed(2);
+  document.getElementById('r-pendiente-bs').innerText = "Bs. " + (pendiente * tasa).toFixed(2);
+  document.getElementById('r-productos-lista').innerHTML = v.productoResumen;
+  document.getElementById('r-tasa-aplicada').innerText = `Tasa aplicada: ${tasa.toFixed(2)} Bs`;
+  
+  if (v.direccion) {
+      document.getElementById('r-dir-container').style.display = 'flex';
+      document.getElementById('r-direccion').innerText = v.direccion;
+  } else {
+      document.getElementById('r-dir-container').style.display = 'none';
+  }
+
+  if (v.deliveryCosto && v.deliveryCosto > 0) {
+      document.getElementById('r-delivery-container').style.display = 'flex';
+      document.getElementById('r-delivery').innerText = `$${Number(v.deliveryCosto).toFixed(2)} (${v.motorizadoNombre || 'Motorizado'})`;
+      document.getElementById('btn-enviar-delivery').style.display = 'block';
+  } else {
+      document.getElementById('r-delivery-container').style.display = 'none';
+      document.getElementById('btn-enviar-delivery').style.display = 'none';
+  }
+  
+  document.getElementById('modal-recibo').style.display = 'flex'; 
+}
+
+function cerrarModalRecibo() { document.getElementById('modal-recibo').style.display = 'none'; }
+function verReciboExistente(id) { 
+    const v = ventas.find(x=>x && x.id===id); 
+    if(v) mostrarModalRecibo(v); 
+}
+
+function poblarDatalistProductos() { 
+    try {
+        const listHtmlStock = inventario
+            .filter(p => p && !esProductoDecant(p) && Number(p.stock) > 0)
+            .map(p => `<option value="${p.nombre}">`)
+            .join('');
+        
+        const decantsAbiertos = inventario.filter(p => p && esProductoDecant(p) && Number(p.stock) > 0);
+        const listHtmlDecants = decantsAbiertos
+            .map(p => `<option value="${p.nombre}">${p.stock} ML disponibles</option>`)
+            .join('');
+        
+        document.getElementById('lista-productos-stock').innerHTML = listHtmlStock;
+        document.getElementById('lista-productos-decants').innerHTML = listHtmlDecants;
+        document.getElementById('lista-productos-combos').innerHTML = listHtmlStock;
+
+        const selectDecEl = document.getElementById('dec-producto-select');
+        if (selectDecEl) {
+            selectDecEl.innerHTML = `<option value="">-- Elige un frasco abierto (${decantsAbiertos.length}) --</option>` + 
+                decantsAbiertos.map(p => `<option value="${p.id}">${p.nombre} (${p.stock} ML)</option>`).join('');
+        }
+    } catch(e){}
+}
+
+async function ejecutarEnvioWhatsAppModal() {
+    if(!ventaActualRecibo) return alert("⚠️ No hay una venta activa seleccionada.");
+    const v = ventaActualRecibo;
+    let tel = (v.telefono || '').replace(/\D/g, ''); 
+    if (tel.startsWith('0')) tel = '58' + tel.substring(1);
+    
+    const ticketEl = document.getElementById('ticket-recibo-captura');
+    const pend = Math.max(0, Number(v.total) - Number(v.abonado));
+    let deliveryTexto = (v.deliveryCosto && v.deliveryCosto > 0) ? `\n🛵 *Delivery:* $${Number(v.deliveryCosto).toFixed(2)} (${v.motorizadoNombre || 'Motorizado'})` : '';
+    
+    const texto = `Hola ${v.cliente}! Gracias por tu compra en PERFUMA2.\n\n🛒 *Detalle de tu pedido:*\n${v.productoResumen}${deliveryTexto}\n💳 *Método de pago:* ${v.metodo}\n\n*Resumen de cuenta:*\n💰 Total: $${Number(v.total).toFixed(2)} (Bs. ${(Number(v.total) * obtenerTasaActiva()).toFixed(2)})\n✅ Abonado: $${Number(v.abonado).toFixed(2)} (Bs. ${(Number(v.abonado) * obtenerTasaActiva()).toFixed(2)})\n⚠️ Saldo Pendiente: $${pend.toFixed(2)} (Bs. ${(pend * obtenerTasaActiva()).toFixed(2)})\n\n¡Que disfrutes mucho tu fragancia!`;
+
+    try {
+        const canvas = await html2canvas(ticketEl, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
+        
+        canvas.toBlob(async (blob) => {
+            if (!blob) return;
+            const file = new File([blob], `Recibo_${v.cliente.replace(/\s+/g,'_')}.png`, { type: 'image/png' });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Recibo PERFUMA2',
+                        text: texto
+                    });
+                    return; 
+                } catch(err) {
+                    console.log("Share cancelado, usando fallback...");
+                }
+            }
+
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]);
+                }
+            } catch(clipErr) {
+                console.log("Clipboard fallback:", clipErr);
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Recibo_${v.cliente.replace(/\s+/g,'_')}.png`;
+            a.click();
+
+            alert("📋 ¡Recibo copiado al portapapeles y descargado!\n\nAl abrirse WhatsApp, presiona 'Ctrl + V' (Pegar) en el chat para enviar la imagen junto con el resumen.");
+            window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank');
+        }, 'image/png');
+
+    } catch(e) {
+        console.error("Error al procesar ticket:", e);
+        window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank');
+    }
+}
+
+function ejecutarEnvioMotorizadoWhatsApp(idVenta) {
+    let v = idVenta ? ventas.find(x => x && x.id === idVenta) : ventaActualRecibo;
+    if(!v) return alert("⚠️ No hay venta seleccionada para el delivery.");
+    
+    let telMoto = (v.motorizadoTelefono || '').replace(/\D/g, ''); 
+    if (telMoto.startsWith('0')) telMoto = '58' + telMoto.substring(1);
+    if (!telMoto) {
+        telMoto = prompt("Ingrese el teléfono del motorizado con código de país (Ej: 584121234567):", "");
+        if(!telMoto) return;
+    }
+    
+    const msgMoto = `🛵 *NUEVO DESPACHO PERFUMA2* 🛵\n\nMotorizado: ${v.motorizadoNombre || 'Motorizado'}\nCliente: ${v.cliente}\nTeléfono: ${v.telefono || 'N/A'}\nDirección: ${v.direccion || 'Sin dirección'}\n\n*LLEVAR:*\n${v.productoResumen}\n\n*Estado:* Factura pagada (Solo entregar).\nCosto de tu carrera: $${Number(v.deliveryCosto || 0).toFixed(2)}\n¡Buen viaje!`;
+    window.open(`https://wa.me/${telMoto}?text=${encodeURIComponent(msgMoto)}`, '_blank');
+}
+
+function renderDashboardKPIs() {
+    let totalVentas = 0, totalGanancia = 0, totalUtilidad = 0, porCobrar = 0, stockFisico = 0, valorStock = 0;
+    
+    ventas.forEach(v => {
+        if(!v) return;
+        totalVentas += Number(v.total || 0);
+        let costoVenta = 0;
+        if(v.productos && Array.isArray(v.productos)) {
+            v.productos.forEach(item => {
+                let pInv = inventario.find(x => x && x.id === item.productoId);
+                if(pInv) costoVenta += (Number(pInv.costo || 0) * Number(item.cantidad || 1));
+            });
+        }
+        totalGanancia += (Number(v.total || 0) - costoVenta);
+        totalUtilidad += Number(v.abonado || 0);
+        porCobrar += Math.max(0, Number(v.total || 0) - Number(v.abonado || 0));
+    });
+
+    gastos.forEach(g => {
+        if(g && g.monto) totalUtilidad -= Number(g.monto);
+    });
+
+    inventario.forEach(i => {
+        if(i && !esProductoDecant(i)) {
+            stockFisico += Number(i.stock || 0);
+            valorStock += (Number(i.stock || 0) * Number(i.costo || 0));
+        }
+    });
+
+    const tasa = obtenerTasaActiva();
+    document.getElementById('kpi-ventas').innerText = `$${totalVentas.toFixed(2)}`;
+    document.getElementById('kpi-ventas-bs').innerText = `Bs. ${(totalVentas * tasa).toFixed(2)}`;
+    document.getElementById('kpi-ganancia').innerText = `$${totalGanancia.toFixed(2)}`;
+    document.getElementById('kpi-ganancia-bs').innerText = `Libre de Costos`;
+    document.getElementById('kpi-utilidad').innerText = `$${totalUtilidad.toFixed(2)}`;
+    document.getElementById('kpi-utilidad-bs').innerText = `Abonado - Gastos`;
+    document.getElementById('kpi-por-cobrar').innerText = `$${porCobrar.toFixed(2)}`;
+    document.getElementById('kpi-por-cobrar-bs').innerText = `Bs. ${(porCobrar * tasa).toFixed(2)}`;
+    document.getElementById('kpi-stock').innerText = stockFisico;
+    document.getElementById('kpi-valor-stock').innerText = `$${valorStock.toFixed(2)}`;
+    document.getElementById('kpi-ganancia-potencial').innerText = `Proyección Venta: $${(valorStock * 1.5).toFixed(2)}`;
+
+    renderGraficasDashboard();
+}
+
+function renderGraficasDashboard() {
+    const conteoProd = {};
+    ventas.forEach(v => {
+        if(v && v.productos) {
+            v.productos.forEach(item => {
+                conteoProd[item.nombre] = (conteoProd[item.nombre] || 0) + Number(item.cantidad || 1);
+            });
+        }
+    });
+    const topProd = Object.entries(conteoProd).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    
+    const canvasTop = document.getElementById('graficaVentasTop');
+    if (canvasTop) {
+        const ctxTop = canvasTop.getContext('2d');
+        if(chartVentasTopInstance) chartVentasTopInstance.destroy();
+        chartVentasTopInstance = new Chart(ctxTop, {
+            type: 'bar',
+            data: {
+                labels: topProd.map(x=>x[0]),
+                datasets: [{ label: 'Unidades Vendidas', data: topProd.map(x=>x[1]), backgroundColor: '#00f2d6' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+
+    const conteoPagos = {};
+    ventas.forEach(v => {
+        if(v && v.metodo) {
+            conteoPagos[v.metodo] = (conteoPagos[v.metodo] || 0) + Number(v.abonado || 0);
+        }
+    });
+    const canvasPagos = document.getElementById('graficaPagos');
+    if (canvasPagos) {
+        const ctxPagos = canvasPagos.getContext('2d');
+        if(chartPagosInstance) chartPagosInstance.destroy();
+        chartPagosInstance = new Chart(ctxPagos, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(conteoPagos),
+                datasets: [{ data: Object.values(conteoPagos), backgroundColor: ['#3a86ff', '#06d6a0', '#ffb703', '#9d4edd', '#ff4d6d'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    let porCobrarAll = ventas.reduce((s,v)=>s+Math.max(0,Number(v.total||0)-Number(v.abonado||0)),0);
+    let stockFisicoAll = inventario.reduce((s,i)=>s+(!esProductoDecant(i)?Number(i.stock||0):0),0);
+    let valorStockAll = inventario.reduce((s,i)=>s+(!esProductoDecant(i)?(Number(i.stock||0)*Number(i.costo||0)):0),0);
+
+    const mejoresClientesHTML = ventas.slice(0, 10).map(v => `<div><b>${v.cliente}</b>: $${Number(v.total).toFixed(2)} (${v.plan || 'Contado'})</div>`).join('') || "Sin registros";
+    document.getElementById('dash-mejores-clientes').innerHTML = mejoresClientesHTML;
+    
+    let alertasIA = `<div style="background:rgba(6,214,160,0.1); border:1px solid var(--success); padding:12px; border-radius:10px; margin-bottom:8px;"><b>📈 Análisis IA:</b> Tu capital en stock activo es de $${valorStockAll.toFixed(2)} (${stockFisicoAll} unidades). Tienes $${porCobrarAll.toFixed(2)} por cobrar en cuotas activas.</div>`;
+    document.getElementById('ia-contenedor-alertas').innerHTML = alertasIA;
+}
+
+function iniciarCatalogoPublico() {
+    document.title = "Catálogo - PERFUMA2";
+    document.getElementById('app-catalogo').style.display = 'block';
+    renderCatalogoPublico();
+}
+
+function setCatFiltro(filtro, btnElement) {
+    document.querySelectorAll('.cat-filter-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+    document.getElementById('cat-search').setAttribute('data-filtro', filtro);
+    renderCatalogoPublico();
+}
+
+function renderCatalogoPublico() {
+    const tasa = obtenerTasaActiva();
+    const tasaEl = document.getElementById('cat-tasa-display');
+    if (tasaEl) tasaEl.innerText = `Tasa: ${tasa.toFixed(2)} Bs`;
+    
+    const busq = (document.getElementById('cat-search').value || '').toLowerCase();
+    const filtro = document.getElementById('cat-search').getAttribute('data-filtro') || 'todo';
+    
+    let disp = inventario.filter(p => p && Number(p.stock) > 0);
+    
+    if (filtro === 'perfumes') {
+        disp = disp.filter(p => !esProductoDecant(p) && p.formato !== 'Combo' && (!p.marca || !p.marca.includes('COMBO')));
+    } else if (filtro === 'decants') {
+        disp = disp.filter(p => esProductoDecant(p));
+    } else if (filtro === 'combos') {
+        disp = disp.filter(p => p.formato === 'Combo' || (p.marca && p.marca.includes('COMBO')));
+    }
+    
+    if (busq) {
+        disp = disp.filter(p => (p.nombre && p.nombre.toLowerCase().includes(busq)) || (p.marca && p.marca.toLowerCase().includes(busq)) || (p.notas && p.notas.toLowerCase().includes(busq)));
+    }
+    
+    const grid = document.getElementById('cat-grid-productos');
+    if (!grid) return;
+    
+    grid.innerHTML = disp.map(p => {
+        const esDec = esProductoDecant(p);
+        const formatoTxt = esDec ? `${p.stock} ML (Muestras)` : (p.formato || '100ml');
+        const precioTxt = `$${Number(p.precio).toFixed(2)}`;
+        return `
+        <div class="cat-item">
+            <div class="cat-item-img">${p.imgUrl ? `<img src="${p.imgUrl}" style="width:100%; height:100%; object-fit:cover;">` : (esDec ? '🧪' : '🧴')}</div>
+            <div>
+                <div class="cat-item-brand">${p.marca || 'MAYORISTA'}</div>
+                <div class="cat-item-name">${p.nombre}</div>
+                <div class="cat-item-format">${formatoTxt}</div>
+            </div>
+            <div>
+                <div class="cat-item-price">${precioTxt}</div>
+                <div class="cat-item-bs">Bs. ${(Number(p.precio) * tasa).toFixed(2)}</div>
+                <button class="cat-item-btn" onclick="agregarAlCarritoPublico('${p.id}', ${Number(p.precio)}, ${esDec})">Añadir</button>
+            </div>
+        </div>`;
+    }).join('') || "<div style='grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted);'>No hay productos disponibles en esta categoría.</div>";
+}
+
+function agregarAlCarritoPublico(id, precio, esMuestra) {
+    const p = inventario.find(x => x && x.id === id); if(!p) return;
+    const ex = carritoPublico.find(i => i.id === id);
+    if(ex) { ex.cantidad++; ex.subtotal = ex.cantidad * ex.precio; }
+    else { carritoPublico.push({ id: p.id, nombre: p.nombre, precio: precio, cantidad: 1, subtotal: precio }); }
+    actualizarBarraCarritoPublico();
+}
+
+function actualizarBarraCarritoPublico() {
+    const cant = carritoPublico.reduce((s,i)=>s+i.cantidad,0), tot = carritoPublico.reduce((s,i)=>s+i.subtotal,0);
+    document.getElementById('cat-cart-btn-txt').innerText = `Ver Carrito (${cant})`;
+    document.getElementById('cat-cart-total-txt').innerText = `$${tot.toFixed(2)}`;
+    document.getElementById('cat-checkout-total').innerText = `$${tot.toFixed(2)}`;
+    document.getElementById('cat-checkout-bs').innerText = `Bs. ${(tot*obtenerTasaActiva()).toFixed(2)}`;
+}
+
+function abrirModalCarritoPublico() {
+    document.getElementById('cat-carrito-items').innerHTML = carritoPublico.map(i=>`<div class="pub-cart-item"><span>${i.cantidad}x ${i.nombre} ($${i.subtotal.toFixed(2)})</span></div>`).join('') || "Vacío";
+    document.getElementById('modal-carrito-pub').style.display = 'flex';
+}
+
+function enviarPedidoWeb() {
+    if(carritoPublico.length === 0) return alert("Carrito vacío");
+    const nom = document.getElementById('cat-cli-nombre').value.trim(), tel = document.getElementById('cat-cli-tel').value.trim();
+    if(!nom || !tel) return alert("Faltan datos");
+    const pedido = { id: 'web_'+Date.now(), fecha: new Date().toLocaleString(), cliente: nom, telefono: tel, items: [...carritoPublico], total: carritoPublico.reduce((s,i)=>s+i.subtotal,0), timestamp: Date.now() };
+    db.ref('perfuma2_data/pedidos').push(pedido).then(()=>{
+        alert("✅ Pedido enviado con éxito");
+        carritoPublico = [];
+        document.getElementById('modal-carrito-pub').style.display = 'none';
+        renderCatalogoPublico();
+    });
+}
+
+function renderPedidosWeb() {
+    const cont = document.getElementById('contenedor-pedidos-web');
+    if(!cont) return;
+    cont.innerHTML = pedidosWeb.map(p=>`<div style="background:rgba(255,255,255,0.02); padding:14px; border-radius:12px; margin-bottom:10px; border:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;"><div><b>${p.cliente}</b> (${p.telefono}) - Total: $${p.total.toFixed(2)}</div><div><button class="btn-primary" onclick="facturarPedidoWeb('${p.id}')" style="font-weight:900;">⚡ Cargar</button> <button class="btn-danger" onclick="eliminarPedidoIndividualWeb('${p.id}')">🗑️</button></div></div>`).join('') || "<div style='text-align:center;color:var(--text-muted);'>No hay pedidos web.</div>";
+    
+    const badge = document.getElementById('badge-pedidos');
+    if(badge) {
+        if(pedidosWeb.length > 0) { badge.innerText = pedidosWeb.length; badge.style.display = 'inline-block'; }
+        else { badge.style.display = 'none'; }
+    }
+}
+
+function facturarPedidoWeb(id) {
+    const p = pedidosWeb.find(x=>x.id===id); if(!p) return;
+    cambiarTab('ventas');
+    document.getElementById('v-cliente').value = p.cliente;
+    document.getElementById('v-telefono').value = p.telefono;
+    carritoDetal = p.items.map(i=>({ productoId: i.id, nombre: i.nombre, precio: i.precio, cantidad: i.cantidad, subtotal: i.subtotal }));
+    renderCarrito('detal');
+    db.ref('perfuma2_data/pedidos').orderByChild('id').equalTo(id).once('value', snap => { snap.forEach(c => c.ref.remove()); });
+}
+
+function eliminarPedidoIndividualWeb(id) {
+    if(!confirm("¿Borrar este pedido?")) return;
+    db.ref('perfuma2_data/pedidos').orderByChild('id').equalTo(id).once('value', snap => { snap.forEach(c => c.ref.remove()); });
+}
+
+function limpiarPedidosWeb() {
+    if(!confirm("¿Borrar todos los pedidos del buzón?")) return;
+    db.ref('perfuma2_data/pedidos').remove().then(() => {
+        pedidosWeb = [];
+        renderPedidosWeb();
+        alert("✅ Buzón de pedidos limpiado.");
+    });
+}
+
+function guardarNumeroWA() {
+    const num = document.getElementById('config-wa-tienda').value.replace(/\D/g, '');
+    if(num.length < 10) return alert("Número inválido");
+    numeroWhatsAppTienda = num;
+    db.ref('perfuma2_data/numeroWhatsAppTienda').set(num);
+    alert("✅ Número guardado");
+}
+
+/* FUNCIONES DEL ACTUALIZADOR Y ROLLBACK */
+function abrirModalActualizador() {
+  const pin = prompt("🔒 Ingresa el PIN de seguridad para acceder al actualizador:");
+  if (pin !== "2026") {
+    alert("❌ PIN incorrecto.");
+    return;
+  }
+
+  db.ref('perfuma2_version_control').once('value', (snap) => {
+    const vc = snap.val() || {};
+    document.getElementById('act-ver-actual').innerText = vc.versionActual || 'v.95 oyamh95';
+    document.getElementById('act-ver-previa').innerText = vc.versionAnterior || 'Sin respaldo';
+    document.getElementById('act-nueva-version').value = '';
+    document.getElementById('act-codigo-nuevo').value = '';
+    document.getElementById('modal-actualizador').style.display = 'flex';
+  });
+}
+
+function cerrarModalActualizador() {
+  document.getElementById('modal-actualizador').style.display = 'none';
+}
+
+function publicarActualizacion() {
+  const nuevaVer = document.getElementById('act-nueva-version').value.trim();
+  const nuevoCodigo = document.getElementById('act-codigo-nuevo').value.trim();
+
+  if (!nuevaVer || !nuevoCodigo) {
+    return alert("⚠️ Debes indicar la etiqueta de versión y el código.");
+  }
+
+  db.ref('perfuma2_version_control').once('value', (snap) => {
+    const actual = snap.val() || {};
+    
+    db.ref('perfuma2_version_control').set({
+      versionActual: nuevaVer,
+      codigoActual: nuevoCodigo,
+      versionAnterior: actual.versionActual || 'v.95 oyamh95',
+      codigoAnterior: actual.codigoActual || '',
+      fecha: new Date().toLocaleString('es-VE')
+    }).then(() => {
+      alert("✅ ¡Actualización publicada con éxito! El sistema se recargará.");
+      cerrarModalActualizador();
+      window.location.reload(true);
+    }).catch(err => {
+      alert("❌ Error al guardar en Firebase: " + err.message);
+    });
+  });
+}
+
+function revertirVersion() {
+  if (!confirm("⚠️ ¿Estás seguro de deshacer los últimos cambios y volver a la versión anterior?")) return;
+
+  db.ref('perfuma2_version_control').once('value', (snap) => {
+    const vc = snap.val() || {};
+    if (!vc.codigoAnterior && vc.codigoAnterior !== '') {
+      return alert("❌ No existe una versión anterior registrada para revertir.");
+    }
+
+    db.ref('perfuma2_version_control').set({
+      versionActual: vc.versionAnterior || 'v.95 oyamh95',
+      codigoActual: vc.codigoAnterior || '',
+      versionAnterior: 'Revertido',
+      codigoAnterior: null,
+      fecha: new Date().toLocaleString('es-VE')
+    }).then(() => {
+      alert("⏪ Versión revertida con éxito. Recargando...");
+      cerrarModalActualizador();
+      window.location.reload(true);
+    }).catch(err => {
+      alert("❌ Error al revertir en Firebase: " + err.message);
+    });
+  });
+}
+
+function renderTodo() { 
+  if(isCatalogoPublico) return;
+  try { poblarDatalistProductos(); } catch(e){} 
+  try { renderInventario(); } catch(e){} 
+  try { renderHistorialesVentas(); } catch(e){} 
+  try { renderClientes(); } catch(e){} 
+  try { renderGastos(); } catch(e){} 
+  try { renderDashboardKPIs(); } catch(e){} 
+  try { renderCarrito('detal'); } catch(e){} 
+  try { renderCarrito('mayor'); } catch(e){} 
+  try { renderCarritoDecant(); } catch(e){} 
+  try { renderPedidosWeb(); } catch(e){}
+}
+
+window.onload = function() { verificarBloqueoSeguridad(); };
+</script>
+</body>
+</html>
