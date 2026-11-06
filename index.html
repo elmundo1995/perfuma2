@@ -1093,40 +1093,45 @@ function restaurarRespaldoJSON(inputElement) {
     reader.onload = function(e) {
         try {
             let data = JSON.parse(e.target.result);
-        
-        // Desempaqueta si viene directo de Firebase Console
-        if (data.perfuma2_cloud && data.perfuma2_cloud.inventario) {
-          data = data.perfuma2_cloud;
-        } else if (data.perfuma2_respaldos) {
-          const claves = Object.keys(data.perfuma2_respaldos).sort();
-          const ultima = claves[claves.length - 1];
-          data = data.perfuma2_respaldos[ultima].datos || data.perfuma2_respaldos[ultima];
-        } else if (data.perfuma2_data && data.perfuma2_data.inventario) {
-          data = data.perfuma2_data;
-        } else if (data.datos) {
-          data = data.datos;
-        }
 
-        let invRecuperado = data.inventario || (Array.isArray(data) ? data : null);
+            // Desempaquetador automático de Firebase Console
+            if (data.perfuma2_cloud && (data.perfuma2_cloud.inventario || data.perfuma2_cloud.ventas)) {
+                data = data.perfuma2_cloud;
+            } else if (data.perfuma2_respaldos) {
+                const claves = Object.keys(data.perfuma2_respaldos).sort();
+                const ultima = claves[claves.length - 1];
+                data = data.perfuma2_respaldos[ultima].datos || data.perfuma2_respaldos[ultima];
+            } else if (data.perfuma2_data && (data.perfuma2_data.inventario || data.perfuma2_data.ventas)) {
+                data = data.perfuma2_data;
+            } else if (data.datos) {
+                data = data.datos;
+            }
 
-        if (invRecuperado || data.ventas) {
-          if (confirm("⚠️ ¿Estás seguro de restaurar esta copia? Reemplazará los datos actuales por los del archivo de respaldo.")) {
-            if (invRecuperado) inventario = safeArray(invRecuperado);
-            if (data.ventas) ventas = safeArray(data.ventas);
-            if (data.gastos) gastos = safeArray(data.gastos);
-            if (data.pedidos) pedidosWeb = safeArray(data.pedidos);
-            tasaBCV = data.tasaBCV || tasaBCV;
-            tasaUSDT = data.tasaUSDT || tasaUSDT;
-            margenGlobalActual = data.margenGlobalActual || margenGlobalActual;
+            let invRecuperado = data.inventario || (Array.isArray(data) ? data : null);
+            let ventasRecuperadas = data.ventas || null;
+
+            if (invRecuperado || ventasRecuperadas) {
+                if (confirm("⚠️ ¿Estás seguro de restaurar esta copia? Reemplazará los datos actuales y los sincronizará en la nube.")) {
+                    if (invRecuperado) inventario = safeArray(invRecuperado);
+                    if (ventasRecuperadas) ventas = safeArray(ventasRecuperadas);
+                    if (data.gastos) gastos = safeArray(data.gastos);
+                    if (data.pedidos) pedidosWeb = safeArray(data.pedidos);
+                    
+                    tasaBCV = Number(data.tasaBCV) || tasaBCV;
+                    tasaUSDT = Number(data.tasaUSDT) || tasaUSDT;
+                    margenGlobalActual = Number(data.margenGlobalActual) || margenGlobalActual;
+                    numeroWhatsAppTienda = data.numeroWhatsAppTienda || numeroWhatsAppTienda;
+
                     guardarCambiosEnNube(false);
                     renderTodo();
-                    reproducirSonido('exito');
+                    if (typeof reproducirSonido === 'function') reproducirSonido('exito');
                     alert("✅ ¡Copia de seguridad restaurada exitosamente!");
                 }
             } else {
-                alert("❌ El archivo seleccionado no contiene un formato de respaldo válido de PERFUMA2.");
+                alert("❌ El archivo seleccionado no contiene inventario ni ventas reconocibles.");
             }
         } catch(err) {
+            console.error(err);
             alert("❌ Error al procesar el archivo JSON.");
         }
     };
@@ -1366,10 +1371,58 @@ db.ref('perfuma2_cloud').on('value', (snapshot) => {
 
 function guardarCambiosEnNube(esManual = false) {
   if (!nubeCargada || isCatalogoPublico) return;
-  db.ref('perfuma2_cloud').set({ 
-      inventario, ventas, gastos, pedidos: pedidosWeb, tasaBCV, tasaUSDT, tipoTasaActiva, margenGlobalActual, numeroWhatsAppTienda, updatedAt: Date.now() 
-  });
-  if (esManual) { reproducirSonido('exito'); alert("✅ Guardado en la nube completado."); }
+
+  const btnSync = document.getElementById('btn-sync-manual');
+  const statusEl = document.getElementById('cloud-status');
+
+  if (esManual && btnSync) {
+    btnSync.disabled = true;
+    btnSync.innerText = "⏳ Guardando...";
+  }
+  if (statusEl) {
+    statusEl.innerText = "● Subiendo...";
+    statusEl.style.color = "var(--warning)";
+  }
+
+  const paqueteDatos = {
+    inventario: safeArray(inventario),
+    ventas: safeArray(ventas),
+    gastos: safeArray(gastos),
+    pedidos: safeArray(pedidosWeb),
+    tasaBCV: Number(tasaBCV),
+    tasaUSDT: Number(tasaUSDT),
+    tipoTasaActiva: tipoTasaActiva,
+    margenGlobalActual: Number(margenGlobalActual),
+    numeroWhatsAppTienda: numeroWhatsAppTienda,
+    updatedAt: Date.now()
+  };
+
+  db.ref('perfuma2_cloud').set(paqueteDatos)
+    .then(() => {
+      localStorage.setItem('p2_local_cache', JSON.stringify(paqueteDatos));
+      if (statusEl) {
+        statusEl.innerText = "● Sincronizado";
+        statusEl.style.color = "var(--success)";
+      }
+      if (esManual) {
+        if (typeof reproducirSonido === 'function') reproducirSonido('exito');
+        alert("✅ ¡Datos guardados exitosamente en la nube!");
+      }
+    })
+    .catch((err) => {
+      console.error("Error al guardar en Firebase:", err);
+      if (statusEl) {
+        statusEl.innerText = "● Error al Guardar";
+        statusEl.style.color = "var(--danger)";
+      }
+      alert("⚠️ Hubo un error de conexión al guardar en la nube. Revisa tu internet.");
+    })
+    .finally(() => {
+      if (esManual && btnSync) {
+        btnSync.disabled = false;
+        btnSync.innerText = "☁️ Guardar Nube";
+      }
+    });
 }
 
 function alternarTipoTasa(sel) { reproducirSonido('click'); tipoTasaActiva = sel; aplicarEstiloTasaActiva(); renderTodo(); guardarCambiosEnNube(false); }
