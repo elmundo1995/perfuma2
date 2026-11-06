@@ -1090,18 +1090,18 @@ setTimeout(function() {
             </div>
 
             <!-- Cabecera con Logo 3D -->
-            <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; border-bottom: 2px dashed rgba(0,242,214,0.3); padding-bottom:14px; margin-bottom:16px;">
+            <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-bottom: 2px dashed rgba(0,242,214,0.3); padding-bottom:14px; margin-bottom:16px;">
               <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:55px; height:55px; border-radius:50%; border:2px solid #00f2d6; overflow:hidden; box-shadow:0 0 15px rgba(0,242,214,0.5);">
+                <div style="width:52px; height:52px; border-radius:50%; border:2px solid #00f2d6; overflow:hidden; box-shadow:0 0 15px rgba(0,242,214,0.5); flex-shrink:0;">
                   <img src="logo.jpg.jpg" style="width:100%; height:100%; object-fit:cover;">
                 </div>
                 <div>
-                  <div style="font-size:22px; font-weight:900; color:#00f2d6; letter-spacing:1px; line-height:1;">PERFUMA2</div>
+                  <div style="font-size:20px; font-weight:900; color:#00f2d6; letter-spacing:1px; line-height:1.1;">PERFUMA2</div>
                   <div style="font-size:10px; color:#94a3b8; font-weight:800; text-transform:uppercase; margin-top:3px;">Boutique de Fragancias</div>
                 </div>
               </div>
               <div style="text-align:right;">
-                <span id="tc-badge-concepto" style="background:rgba(0,242,214,0.15); border:1px solid #00f2d6; color:#00f2d6; font-size:10px; font-weight:900; padding:4px 10px; border-radius:20px; text-transform:uppercase;">Pago de Cuota</span>
+                <span id="tc-badge-concepto" style="display:inline-block; background:rgba(0,242,214,0.15); border:1px solid #00f2d6; color:#00f2d6; font-size:10px; font-weight:900; padding:5px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px;">CUOTA / ABONO</span>
               </div>
             </div>
 
@@ -1133,13 +1133,16 @@ setTimeout(function() {
 
         <!-- Botones de Elección para Enviar -->
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn-primary" onclick="enviarCobroWhatsApp('texto')" style="flex:1; min-width:180px; padding:14px; font-size:13px; font-weight:900; background:linear-gradient(135deg, var(--info), #1d4ed8);">
-            💬 Enviar Solo Texto a WhatsApp
+          <button class="btn-primary" onclick="enviarCobroWhatsApp('separado')" style="flex:1.3; min-width:210px; padding:14px; font-size:12px; font-weight:900; background:linear-gradient(135deg, #3a86ff, #1d4ed8);" title="Abre WhatsApp con el saludo y copia los datos bancarios para enviar en un segundo mensaje">
+            💬 Enviar Detalle + Cuenta Aparte
           </button>
-          <button class="btn-primary" onclick="enviarCobroWhatsApp('imagen')" style="flex:1.4; min-width:200px; padding:14px; font-size:13px; font-weight:900; background:linear-gradient(135deg, var(--success), #059669);">
-            🖼️ Enviar Imagen y Texto a WhatsApp
+          <button class="btn-secondary" onclick="copiarSoloDatosCuenta()" style="flex:1; min-width:180px; padding:14px; font-size:12px; font-weight:900; border-color:var(--warning); color:var(--warning);">
+            📋 Copiar Solo la Cuenta (Pago Móvil)
           </button>
-          <button class="btn-secondary" onclick="descargarTarjetaCobroPNG()" style="flex:0.8; min-width:140px; padding:14px; font-size:13px; font-weight:900; border-color:var(--accent); color:var(--accent);">
+          <button class="btn-primary" onclick="enviarCobroWhatsApp('imagen')" style="flex:1.3; min-width:200px; padding:14px; font-size:12px; font-weight:900; background:linear-gradient(135deg, var(--success), #059669);">
+            🖼️ Enviar Imagen y Texto
+          </button>
+          <button class="btn-secondary" onclick="descargarTarjetaCobroPNG()" style="flex:0.8; min-width:130px; padding:14px; font-size:12px; font-weight:900; border-color:var(--accent); color:var(--accent);">
             💾 Descargar PNG
           </button>
         </div>
@@ -1690,7 +1693,14 @@ db.ref('perfuma2_cloud').on('value', (snapshot) => {
     tipoTasaActiva = data.tipoTasaActiva || 'bcv';
     tasaBCV = data.tasaBCV || tasaBCV || 887.30; 
     tasaUSDT = data.tasaUSDT || tasaUSDT || 950.00; 
-    numeroWhatsAppTienda = data.numeroWhatsAppTienda || "584120551688";
+        numeroWhatsAppTienda = data.numeroWhatsAppTienda || "584120551688";
+    if (data.config_cuentas) {
+        configCuentasPago = { ...configCuentasPago, ...data.config_cuentas };
+        for (const [k, v] of Object.entries(configCuentasPago)) {
+            localStorage.setItem('p2_cfg_' + k, v);
+        }
+        try { inicializarConfigMetodosPagoUI(); } catch(e){}
+    }
     
     if(!isCatalogoPublico) {
         document.getElementById('tasaBCVInput').value = tasaBCV; 
@@ -3238,14 +3248,14 @@ function copiarTextoAlPortapapeles(txt) {
 // SISTEMA INTEGRAL DE COBROS MULTI-MÉTODO Y GENERADOR DE TARJETAS 3D
 // ============================================================================
 let configCuentasPago = {
-    pmBanco: localStorage.getItem('cfg_pm_banco') || 'Banesco (0134)',
-    pmCedula: localStorage.getItem('cfg_pm_cedula') || 'V-24163492',
-    pmTelefono: localStorage.getItem('cfg_pm_telefono') || '04120551688',
-    zelleCorreo: localStorage.getItem('cfg_zelle_correo') || 'pagos@perfuma2.com',
-    zelleTitular: localStorage.getItem('cfg_zelle_titular') || 'PERFUMA2 C.A.',
-    binanceId: localStorage.getItem('cfg_binance_id') || 'oyamh95 (Pay ID)',
-    transfBanco: localStorage.getItem('cfg_transf_banco') || 'Banesco',
-    transfCuenta: localStorage.getItem('cfg_transf_cuenta') || '0134-XXXX-XX-XXXXXXXXXX'
+    pmBanco: localStorage.getItem('p2_cfg_pmBanco') || 'Banesco (0134)',
+    pmCedula: localStorage.getItem('p2_cfg_pmCedula') || 'V-24163492',
+    pmTelefono: localStorage.getItem('p2_cfg_pmTelefono') || '04120551688',
+    zelleCorreo: localStorage.getItem('p2_cfg_zelleCorreo') || 'pagos@perfuma2.com',
+    zelleTitular: localStorage.getItem('p2_cfg_zelleTitular') || 'PERFUMA2 C.A.',
+    binanceId: localStorage.getItem('p2_cfg_binanceId') || 'oyamh95 (Pay ID)',
+    transfBanco: localStorage.getItem('p2_cfg_transfBanco') || 'Banesco',
+    transfCuenta: localStorage.getItem('p2_cfg_transfCuenta') || '0134-XXXX-XX-XXXXXXXXXX'
 };
 
 function inicializarConfigMetodosPagoUI() {
@@ -3273,13 +3283,14 @@ function guardarConfigMetodosPagoCompleto() {
     configCuentasPago.transfCuenta = document.getElementById('cfg-transf-cuenta').value.trim() || configCuentasPago.transfCuenta;
 
     for (const [k, v] of Object.entries(configCuentasPago)) {
-        localStorage.setItem('p2_' + k, v);
+        localStorage.setItem('p2_cfg_' + k, v);
     }
     db.ref('perfuma2_cloud/config_cuentas').set(configCuentasPago);
     reproducirSonido('exito');
     actualizarPrevisualizacionTarjetaCobro();
-    alert("✅ ¡Todas las cuentas bancarias fueron guardadas con éxito!");
+    alert("✅ ¡Cuentas bancarias actualizadas y guardadas con éxito!");
 }
+
 
 function poblarDatalistClientesCobro() {
     const dl = document.getElementById('lista-clientes-autofill');
@@ -3329,8 +3340,14 @@ function actualizarPrevisualizacionTarjetaCobro() {
     const tasa = obtenerTasaActiva();
     const montoBs = (monto * tasa).toFixed(2);
 
+    // Etiqueta concisa para la esquina superior derecha
+    let badgeTexto = 'CUOTA / ABONO';
+    if (concepto.includes('Nuevo Pedido')) badgeTexto = 'NUEVO PEDIDO';
+    else if (concepto.includes('Saldo Restante')) badgeTexto = 'SALDO PENDIENTE';
+    else if (concepto.includes('Decants')) badgeTexto = 'MUESTRAS / DECANTS';
+
     if (document.getElementById('tc-nombre-cliente')) document.getElementById('tc-nombre-cliente').innerText = nom;
-    if (document.getElementById('tc-badge-concepto')) document.getElementById('tc-badge-concepto').innerText = concepto;
+    if (document.getElementById('tc-badge-concepto')) document.getElementById('tc-badge-concepto').innerText = badgeTexto;
     if (document.getElementById('tc-monto-usd')) document.getElementById('tc-monto-usd').innerText = `$${monto.toFixed(2)}`;
     if (document.getElementById('tc-monto-bs')) document.getElementById('tc-monto-bs').innerText = `Bs. ${montoBs}`;
     if (document.getElementById('tc-tasa-info')) document.getElementById('tc-tasa-info').innerText = `Tasa aplicada: ${tasa.toFixed(2)} Bs (${tipoTasaActiva.toUpperCase()})`;
@@ -3399,33 +3416,43 @@ function actualizarPrevisualizacionTarjetaCobro() {
     cont.innerHTML = htmlCuentas;
 }
 
-function generarTextoWhatsAppCobro() {
+
+function generarMensajeDetalleCobro() {
     const nom = (document.getElementById('gc-cliente') ? document.getElementById('gc-cliente').value.trim() : '') || 'Cliente';
     const concepto = document.getElementById('gc-concepto') ? document.getElementById('gc-concepto').value : 'Pago';
-    const metodoSel = document.getElementById('gc-metodo') ? document.getElementById('gc-metodo').value : 'todos';
     const monto = parseFloat(document.getElementById('gc-monto') ? document.getElementById('gc-monto').value : 0) || 0;
     const nota = (document.getElementById('gc-nota') ? document.getElementById('gc-nota').value.trim() : '');
     const tasa = obtenerTasaActiva();
     const montoBs = (monto * tasa).toFixed(2);
 
-    let txt = `✨ *PERFUMA2 - DATOS DE PAGO* ✨\n\n` +
+    let txt = `✨ *PERFUMA2 - DETALLE DE PAGO* ✨\n\n` +
               `Hola *${nom}*, un saludo cordial.\n` +
               `Detalle de cobro correspondiente a: *${concepto}*\n` +
               (nota ? `📌 *Concepto:* ${nota}\n` : '') +
               `\n💰 *Total a pagar:* $${monto.toFixed(2)} (Bs. ${montoBs})\n` +
               `📊 *Tasa del día:* ${tasa.toFixed(2)} Bs (${tipoTasaActiva.toUpperCase()})\n\n` +
-              `*CUENTAS DISPONIBLES PARA TRANSFERIR:*\n\n`;
+              `_A continuación te enviamos los datos bancarios exactos para tu transferencia:_`;
+    return txt;
+}
+
+function generarMensajeSoloDatosCuenta() {
+    const metodoSel = document.getElementById('gc-metodo') ? document.getElementById('gc-metodo').value : 'todos';
+    const monto = parseFloat(document.getElementById('gc-monto') ? document.getElementById('gc-monto').value : 0) || 0;
+    const tasa = obtenerTasaActiva();
+    const montoBs = (monto * tasa).toFixed(2);
+
+    let txt = `💳 *DATOS PARA TRANSFERIR - PERFUMA2* 💳\n\n`;
 
     if (metodoSel === 'todos' || metodoSel === 'pagomovil') {
         txt += `📱 *PAGO MÓVIL:*\n` +
                `• Banco: ${configCuentasPago.pmBanco}\n` +
                `• Cédula: ${configCuentasPago.pmCedula}\n` +
                `• Teléfono: ${configCuentasPago.pmTelefono}\n` +
-               `• Monto en Bs: *Bs. ${montoBs}*\n\n`;
+               `• Monto exacto en Bs: *Bs. ${montoBs}*\n\n`;
     }
 
     if (metodoSel === 'todos' || metodoSel === 'zelle') {
-        txt += `💵 *ZELLE:*\n` +
+        txt += `💵 *ZELLE ($ USD):*\n` +
                `• Correo: ${configCuentasPago.zelleCorreo}\n` +
                `• Titular: ${configCuentasPago.zelleTitular}\n` +
                `• Monto: *$${monto.toFixed(2)} USD*\n\n`;
@@ -3433,20 +3460,25 @@ function generarTextoWhatsAppCobro() {
 
     if (metodoSel === 'todos' || metodoSel === 'binance') {
         txt += `🟡 *BINANCE PAY:*\n` +
-               `• Pay ID / Usuario: ${configCuentasPago.binanceId}\n` +
+               `• Pay ID: ${configCuentasPago.binanceId}\n` +
                `• Monto: *$${monto.toFixed(2)} USDT*\n\n`;
     }
 
     if (metodoSel === 'todos' || metodoSel === 'transferencia') {
-        txt += `🏦 *TRANSFERENCIA BANCARIA (Bs):*\n` +
+        txt += `🏦 *TRANSFERENCIA BANCARIA:*\n` +
                `• Banco: ${configCuentasPago.transfBanco}\n` +
                `• Nro Cuenta: ${configCuentasPago.transfCuenta}\n` +
                `• Cédula: ${configCuentasPago.pmCedula}\n` +
                `• Monto: *Bs. ${montoBs}*\n\n`;
     }
 
-    txt += `_Por favor enviar la captura del comprobante al realizar la transferencia. ¡Muchas gracias por tu confianza!_`;
+    txt += `_Por favor enviar comprobante de pago por este medio. ¡Muchas gracias!_`;
     return txt;
+}
+
+function copiarSoloDatosCuenta() {
+    const txt = generarMensajeSoloDatosCuenta();
+    copiarTextoAlPortapapeles(txt);
 }
 
 async function enviarCobroWhatsApp(tipoEnvio) {
@@ -3454,16 +3486,22 @@ async function enviarCobroWhatsApp(tipoEnvio) {
     let telDestino = tel;
     if (telDestino.startsWith('0')) telDestino = '58' + telDestino.substring(1);
 
-    const texto = generarTextoWhatsAppCobro();
+    if (tipoEnvio === 'separado') {
+        const msg1 = generarMensajeDetalleCobro();
+        const msg2 = generarMensajeSoloDatosCuenta();
 
-    if (tipoEnvio === 'texto') {
-        if (telDestino) {
-            window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(texto)}`, '_blank');
-        } else {
-            copiarTextoAlPortapapeles(texto);
-            window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
-        }
+        // Copiamos al portapapeles los datos bancarios (Mensaje 2)
+        // para que con un simple "Pegar" en el chat se envíe como segundo mensaje
+        navigator.clipboard.writeText(msg2.replace(/\n/g, '\n')).catch(() => {});
         reproducirSonido('exito');
+
+        alert("📲 ¡Listo! Se abrirá WhatsApp con el Detalle del Cobro.\n\nLos Datos Bancarios (Mensaje 2) ya quedaron COPIADOS al portapapeles. Solo dale a 'Pegar' (Ctrl + V / Pegar) en el chat para enviarlos como segundo mensaje.");
+
+        if (telDestino) {
+            window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(msg1)}`, '_blank');
+        } else {
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg1)}`, '_blank');
+        }
         return;
     }
 
@@ -3474,25 +3512,24 @@ async function enviarCobroWhatsApp(tipoEnvio) {
     try {
         reproducirSonido('click');
         const canvas = await html2canvas(cardEl, { scale: 3, backgroundColor: '#090f1d', useCORS: true });
+        const textoMsg = generarMensajeDetalleCobro();
         
         canvas.toBlob(async (blob) => {
             if (!blob) return;
             const nomCli = (document.getElementById('gc-cliente').value.trim() || 'Cliente').replace(/\s+/g, '_');
-            const file = new File([blob], `Cobro_PERFUMA2_${nomCli}.png`, { type: 'image/png' });
+            const file = new File([blob], `Tarjeta_Cobro_${nomCli}.png`, { type: 'image/png' });
 
-            // 1. Intento con Web Share API (en teléfonos móviles permite compartir directo a WhatsApp con imagen y texto)
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
                     await navigator.share({
                         files: [file],
                         title: 'Tarjeta de Pago PERFUMA2',
-                        text: texto
+                        text: textoMsg
                     });
                     return;
                 } catch(e) {}
             }
 
-            // 2. Fallback: Copiar al portapapeles y descargar
             try {
                 if (navigator.clipboard && window.ClipboardItem) {
                     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
@@ -3505,19 +3542,20 @@ async function enviarCobroWhatsApp(tipoEnvio) {
             a.download = `Tarjeta_Cobro_${nomCli}.png`;
             a.click();
 
-            alert("🖼️ ¡Tarjeta generada y copiada al portapapeles!\n\nAl abrirse WhatsApp, presiona 'Pegar' (Ctrl + V) para enviar la imagen junto con el texto.");
+            alert("🖼️ ¡Tarjeta generada y copiada al portapapeles!\n\nAl abrirse WhatsApp, presiona 'Pegar' para enviar la imagen junto con el texto.");
             if (telDestino) {
-                window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(texto)}`, '_blank');
+                window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(textoMsg)}`, '_blank');
             } else {
-                window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+                window.open(`https://wa.me/?text=${encodeURIComponent(textoMsg)}`, '_blank');
             }
         }, 'image/png');
     } catch(err) {
         console.error(err);
         alert("⚠️ No se pudo renderizar la tarjeta en imagen. Se abrirá en formato texto.");
-        window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(texto)}`, '_blank');
+        window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(generMensajeDetalleCobro())}`, '_blank');
     }
 }
+
 
 async function descargarTarjetaCobroPNG() {
     const cardEl = document.getElementById('tarjeta-cobro-render');
