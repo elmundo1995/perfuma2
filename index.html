@@ -1472,11 +1472,12 @@ function solicitarPermisoNotificaciones() {
         alert("Tu navegador no soporta notificaciones nativas.");
     }
 }
+  
 function verificarBloqueoSeguridad() {
     const urlParams = new URLSearchParams(window.location.search);
     const loader = document.getElementById('loader-pantalla');
     
-    // Función para quitar la pantalla de carga inmediatamente
+    // Función para retirar la pantalla de carga inmediatamente
     const quitarLoader = () => {
         if (loader && loader.style.display !== 'none') {
             loader.style.opacity = '0';
@@ -1493,7 +1494,7 @@ function verificarBloqueoSeguridad() {
     const ahora = Date.now();
     const sesionValida = authTime && (ahora - parseInt(authTime)) < 86400000;
 
-    // Timeout de seguridad: máximo 1.5 segundos de pantalla de carga
+    // Timeout forzado de seguridad (máximo 1.2 segundos y entra al sistema)
     setTimeout(() => {
         quitarLoader();
         if (sesionValida) {
