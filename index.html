@@ -311,6 +311,17 @@
     <div class="loader-spinner"></div>
 </div>
 
+<script>
+// Guardián a prueba de fallos: retira la pantalla de carga sí o sí
+setTimeout(function() {
+  var l = document.getElementById('loader-pantalla');
+  if (l && l.style.display !== 'none') {
+    l.style.opacity = '0';
+    setTimeout(function() { l.style.display = 'none'; }, 400);
+  }
+}, 1200);
+</script>
+
 <div id="modal-login" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-main); z-index:99999; display:none; justify-content:center; align-items:center;">
     <div class="modal-box" style="text-align:center;">
         <div style="display:flex; justify-content:center; margin-bottom:20px;">
@@ -1472,12 +1483,10 @@ function solicitarPermisoNotificaciones() {
         alert("Tu navegador no soporta notificaciones nativas.");
     }
 }
-  
+
 function verificarBloqueoSeguridad() {
     const urlParams = new URLSearchParams(window.location.search);
     const loader = document.getElementById('loader-pantalla');
-    
-    // Función para retirar la pantalla de carga inmediatamente
     const quitarLoader = () => {
         if (loader && loader.style.display !== 'none') {
             loader.style.opacity = '0';
@@ -1494,16 +1503,18 @@ function verificarBloqueoSeguridad() {
     const ahora = Date.now();
     const sesionValida = authTime && (ahora - parseInt(authTime)) < 86400000;
 
-    // Timeout forzado de seguridad (máximo 1.2 segundos y entra al sistema)
     setTimeout(() => {
         quitarLoader();
         if (sesionValida) {
-            document.getElementById('modal-login').style.display = 'none';
-            document.getElementById('app-admin').style.display = 'block';
+            const mLogin = document.getElementById('modal-login');
+            const mApp = document.getElementById('app-admin');
+            if (mLogin) mLogin.style.display = 'none';
+            if (mApp) mApp.style.display = 'block';
         } else {
-            document.getElementById('modal-login').style.display = 'flex';
+            const mLogin = document.getElementById('modal-login');
+            if (mLogin) mLogin.style.display = 'flex';
         }
-    }, 1200);
+    }, 1000);
 }
 
 function verificarPIN() {
@@ -3494,9 +3505,7 @@ async function enviarCobroWhatsApp(tipoEnvio) {
             a.download = `Tarjeta_Cobro_${nomCli}.png`;
             a.click();
 
-            alert("🖼️ ¡Tarjeta generada y copiada al portapapeles!
-
-Al abrirse WhatsApp, presiona 'Pegar' (Ctrl + V) para enviar la imagen junto con el texto.");
+            alert("🖼️ ¡Tarjeta generada y copiada al portapapeles!\n\nAl abrirse WhatsApp, presiona 'Pegar' (Ctrl + V) para enviar la imagen junto con el texto.");
             if (telDestino) {
                 window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(texto)}`, '_blank');
             } else {
