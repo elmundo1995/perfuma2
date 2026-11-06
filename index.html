@@ -1,99 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PERFUMA2 - Gestión de Perfumería</title>
-
-<!-- Configuración de Íconos y PWA -->
-<link rel="icon" type="image/jpeg" href="logo.jpg.jpg">
-<link rel="apple-touch-icon" href="logo.jpg.jpg">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PERFUMA2">
-
-<!-- Librerías Externas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-  :root { 
-    --bg-main: #070b14; 
-    --bg-card: #111a2e; 
-    --bg-input: #1a2642; 
-    --border-color: #223254; 
-    --accent: #00f2d6; 
-    --accent-hover: #00c7b0; 
-    --text-main: #f8fafc; 
-    --text-muted: #94a3b8; 
-    --danger: #ff4d6d; 
-    --warning: #ffb703; 
-    --success: #06d6a0; 
-    --info: #3a86ff; 
-    --purple: #9d4edd; 
-  }
-  
-  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-  body { margin: 0; padding: 16px; background: var(--bg-main); color: var(--text-main); font-size: 13px; }
-  
-  #version-badge-flotante {
-      position: fixed; bottom: 15px; right: 15px; background: rgba(0, 242, 214, 0.15);
-      border: 2px solid var(--accent); color: var(--accent); padding: 8px 16px;
-      border-radius: 30px; font-size: 11px; font-weight: 900; z-index: 999999;
-      cursor: pointer; pointer-events: auto; backdrop-filter: blur(10px);
-      box-shadow: 0 0 20px rgba(0, 242, 214, 0.4), inset 0 0 10px rgba(0, 242, 214, 0.2);
-      animation: neonGlow 2s infinite alternate;
-  }
-  @keyframes neonGlow {
-      0% { box-shadow: 0 0 10px rgba(0, 242, 214, 0.3); }
-      100% { box-shadow: 0 0 25px rgba(0, 242, 214, 0.8), inset 0 0 12px rgba(0, 242, 214, 0.4); }
-  }
-
-  #loader-pantalla {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(circle, #111a2e 0%, #070b14 100%); z-index: 9999999;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      transition: opacity 0.8s ease;
-  }
-  .loader-logo-container {
-      width: 150px; height: 150px; border-radius: 50%;
-      border: 4px solid var(--accent);
-      background: linear-gradient(135deg, #111a2e, #1a2642);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 40px rgba(0,242,214,0.6), inset 0 0 20px rgba(0,242,214,0.3);
-      animation: pulseLoader 1.5s infinite alternate;
-      overflow: hidden;
-  }
-  @keyframes pulseLoader {
-      0% { transform: scale(0.95); box-shadow: 0 0 20px rgba(0,242,214,0.3); }
-      100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(0,242,214,0.9); }
-  }
-  .loader-text-glow {
-      color: var(--accent); margin-top: 25px; font-weight: 900; letter-spacing: 3px; font-size: 26px;
-      text-shadow: 0 0 15px rgba(0,242,214,0.7);
-  }
-  .loader-spinner {
-      margin-top: 20px; width: 50px; height: 50px;
-      border: 5px solid var(--border-color); border-top: 5px solid var(--accent);
-      border-radius: 50%; animation: spin 1s linear infinite;
-      box-shadow: 0 0 15px rgba(0,242,214,0.5);
-  }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-  .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 14px; border-bottom: 2px solid var(--border-color); margin-bottom: 18px; }
-  .brand-title { font-size: 26px; font-weight: 900; color: var(--accent); margin: 0; letter-spacing: 1.5px; text-shadow: 0 0 10px rgba(0,242,214,0.4); }
-  .brand-subtitle { font-size: 11px; color: var(--accent); font-weight: 800; text-shadow: 0 0 8px rgba(0,242,214,0.3); }
-  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  
-  .tasa-box { background: var(--bg-card); border: 2px solid var(--border-color); padding: 6px 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-  .tasa-box.activa { border-color: var(--accent); background: rgba(0,242,214,0.1); box-shadow: 0 0 20px rgba(0,242,214,0.3), inset 0 0 8px rgba(0,242,214,0.2); }
-  .tasa-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; display: block; }
-  .tasa-input { background: transparent; border: none; color: #fff; font-weight: 900; font-size: 15px; width: 75px; outline: none; cursor: text; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
-  
-  button { cursor: pointer; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 800; font-size: 12px; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+border-radius: 10px; padding: 10px 16px; font-weight: 800; font-size: 12px; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
   button:active { transform: scale(0.96); }
   .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #070b14; box-shadow: 0 4px 20px rgba(0,242,214,0.4); }
   .btn-primary:hover { box-shadow: 0 6px 25px rgba(0,242,214,0.7); }
@@ -174,8 +79,11 @@
   .cat-item-format { font-size: 11px; color: var(--warning); font-weight: 800; margin-bottom: 10px; }
   .cat-item-price { font-size: 17px; font-weight: 900; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
   .cat-item-bs { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 14px; }
-  .cat-item-btn { width: 100%; background: linear-gradient(135deg, var(--border-color), #2d4270); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; transition: 0.3s; text-transform: uppercase; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .cat-item-btn.added { background: linear-gradient(135deg, var(--success), #04ad80); color: #070b14; box-shadow: 0 0 15px rgba(6,214,160,0.6); }
+  .cat-item-btn { width: 100%; background: linear-gradient(135deg, var(--border-color), #2d4270); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); text-transform: uppercase; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .cat-item-btn:active { transform: scale(0.92); }
+  .cat-item-btn.added { background: linear-gradient(135deg, #06d6a0, #00b386) !important; color: #070b14 !important; box-shadow: 0 0 25px rgba(6,214,160,0.8), inset 0 0 10px rgba(255,255,255,0.4) !important; transform: scale(1.05) !important; }
+  @keyframes pulsoCarrito { 0% { transform: scale(1); } 50% { transform: scale(1.04); box-shadow: 0 -10px 40px rgba(0,242,214,0.5); } 100% { transform: scale(1); } }
+  .cat-cart-pulse { animation: pulsoCarrito 0.4s ease; }
   
   .cat-cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(7,11,20,0.95); backdrop-filter: blur(15px); border-top: 2px solid var(--accent); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 -10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,242,214,0.2); cursor: pointer; }
   .cat-cart-btn { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #070b14; padding: 14px 28px; border-radius: 30px; font-weight: 900; font-size: 15px; border: none; box-shadow: 0 4px 20px rgba(0,242,214,0.5); text-transform: uppercase; }
@@ -490,7 +398,7 @@
       </div>
       <div class="carrito-caja" id="v-items-carrito-lista"><div style="color:var(--text-muted); font-style:italic;">Carrito vacío.</div></div>
       
-      <div class="form-grid">
+      <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
         <div class="form-group">
           <label>Plan Financiamiento</label>
           <select id="v-plan" class="user-input" onchange="recalcularTotalesVenta('detal')">
@@ -510,7 +418,18 @@
             <option value="15">Cada 15 Días</option>
           </select>
         </div>
-        <div class="form-group"><label>Monto Inicial / Abonado ($)</label><input type="number" step="0.01" id="v-abono" class="user-input" value="0" oninput="recalcularTotalesVenta('detal')"></div>
+        <div class="form-group">
+          <label>Moneda del Abono</label>
+          <select id="v-moneda-abono" class="user-input" onchange="cambiarMonedaAbono()">
+            <option value="usd" selected>Dólares ($ USD)</option>
+            <option value="bs">Bolívares (Bs)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label id="lbl-monto-abono">Monto Inicial / Abonado ($ USD)</label>
+          <input type="number" step="0.01" id="v-abono" class="user-input" value="0" oninput="recalcularTotalesVenta('detal')">
+          <div id="v-abono-equivalencia" style="font-size: 11px; font-weight: 800; color: var(--accent); margin-top: 5px; text-shadow: 0 0 6px rgba(0,242,214,0.4);">Equivale a: Bs. 0.00 (Tasa BCV)</div>
+        </div>
       </div>
       
       <div style="background:#070b14; padding:18px; border-radius:12px; border:2px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; box-shadow:inset 0 4px 10px rgba(0,0,0,0.5);">
@@ -2035,18 +1954,43 @@ function renderCarrito(t) {
   recalcularTotalesVenta(t);
 }
 
+function cambiarMonedaAbono() {
+    const sel = document.getElementById('v-moneda-abono').value;
+    const lbl = document.getElementById('lbl-monto-abono');
+    if (sel === 'bs') {
+        lbl.innerText = "Monto Inicial / Abonado (Bs)";
+    } else {
+        lbl.innerText = "Monto Inicial / Abonado ($ USD)";
+    }
+    recalcularTotalesVenta('detal');
+}
+
 function recalcularTotalesVenta(t) {
   const carr = t === 'detal' ? carritoDetal : carritoMayor;
   const tot = carr.reduce((s,i)=>s+i.subtotal,0);
+  const tasa = obtenerTasaActiva();
   
   if(t==='detal') {
       const plan = document.getElementById('v-plan').value;
+      const moneda = document.getElementById('v-moneda-abono') ? document.getElementById('v-moneda-abono').value : 'usd';
       const abonoInput = parseFloat(document.getElementById('v-abono').value) || 0;
       const usaDel = document.getElementById('v-usa-delivery').checked;
       const costoDel = usaDel ? (parseFloat(document.getElementById('v-delivery').value) || 0) : 0;
       
       const totalConDel = tot + costoDel;
-      let abonado = plan === 'Contado' ? totalConDel : Math.min(abonoInput, totalConDel);
+      
+      // Calcular conversión de abono según la moneda elegida
+      let abonoEnDolares = 0;
+      const eqEl = document.getElementById('v-abono-equivalencia');
+      if (moneda === 'bs') {
+          abonoEnDolares = tasa > 0 ? (abonoInput / tasa) : 0;
+          if (eqEl) eqEl.innerText = `Equivale a: $${abonoEnDolares.toFixed(2)} USD (Tasa ${tasa.toFixed(2)} Bs)`;
+      } else {
+          abonoEnDolares = abonoInput;
+          if (eqEl) eqEl.innerText = `Equivale a: Bs. ${(abonoInput * tasa).toFixed(2)} (Tasa ${tasa.toFixed(2)} Bs)`;
+      }
+
+      let abonado = plan === 'Contado' ? totalConDel : Math.min(abonoEnDolares, totalConDel);
       let restante = Math.max(0, totalConDel - abonado);
       
       document.getElementById('v-resumen-abono').innerText = `Total: $${totalConDel.toFixed(2)} | Abonado: $${abonado.toFixed(2)}`;
@@ -2077,9 +2021,17 @@ function registrarVenta(t) {
   const plazoDias = !isM ? (parseInt(document.getElementById('v-plazo-dias').value) || 10) : 10;
   const totalConDel = tot + costoDel;
 
-  const abonoInput = isM ? totalConDel : (parseFloat(document.getElementById('v-abono').value) || 0);
+  const monedaAbono = (!isM && document.getElementById('v-moneda-abono')) ? document.getElementById('v-moneda-abono').value : 'usd';
+  const abonoInputRaw = (!isM && document.getElementById('v-abono')) ? (parseFloat(document.getElementById('v-abono').value) || 0) : 0;
+  const tasaActual = obtenerTasaActiva();
+  
+  let abonoEnDolares = abonoInputRaw;
+  if (!isM && monedaAbono === 'bs') {
+      abonoEnDolares = tasaActual > 0 ? (abonoInputRaw / tasaActual) : 0;
+  }
+  
   const plan = isM ? 'Al Mayor' : document.getElementById('v-plan').value;
-  let abonado = plan === 'Contado' || isM ? totalConDel : Math.min(abonoInput, totalConDel);
+  let abonado = plan === 'Contado' || isM ? totalConDel : Math.min(abonoEnDolares, totalConDel);
 
   carr.forEach(item => {
       let pInv = inventario.find(x => x && x.id === item.productoId);
@@ -2463,18 +2415,39 @@ function renderCatalogoPublico() {
             <div>
                 <div class="cat-item-price">${precioTxt}</div>
                 <div class="cat-item-bs">Bs. ${(Number(p.precio) * tasa).toFixed(2)}</div>
-                <button class="cat-item-btn" onclick="agregarAlCarritoPublico('${p.id}', ${Number(p.precio)}, ${esDec})">Añadir</button>
+                <button class="cat-item-btn" onclick="agregarAlCarritoPublico('${p.id}', ${Number(p.precio)}, ${esDec}, this)">Añadir</button>
             </div>
         </div>`;
     }).join('') || "<div style='grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted);'>No hay productos disponibles en esta categoría.</div>";
 }
 
-function agregarAlCarritoPublico(id, precio, esMuestra) {
+function agregarAlCarritoPublico(id, precio, esMuestra, btnElement) {
     const p = inventario.find(x => x && x.id === id); if(!p) return;
     const ex = carritoPublico.find(i => i.id === id);
     if(ex) { ex.cantidad++; ex.subtotal = ex.cantidad * ex.precio; }
     else { carritoPublico.push({ id: p.id, nombre: p.nombre, precio: precio, cantidad: 1, subtotal: precio }); }
     actualizarBarraCarritoPublico();
+    
+    if (typeof reproducirSonido === 'function') reproducirSonido('click');
+
+    // Gesto visual y cambio de color al añadir
+    if (btnElement) {
+        btnElement.classList.add('added');
+        const txtAnterior = btnElement.innerText;
+        btnElement.innerHTML = '✓ ¡Añadido!';
+        setTimeout(() => {
+            btnElement.classList.remove('added');
+            btnElement.innerHTML = txtAnterior;
+        }, 900);
+    }
+    
+    // Animación de pulso en la barra del carrito flotante
+    const barraCarrito = document.querySelector('.cat-cart-bar');
+    if (barraCarrito) {
+        barraCarrito.classList.remove('cat-cart-pulse');
+        void barraCarrito.offsetWidth;
+        barraCarrito.classList.add('cat-cart-pulse');
+    }
 }
 
 function actualizarBarraCarritoPublico() {
