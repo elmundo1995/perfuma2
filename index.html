@@ -1472,37 +1472,37 @@ function solicitarPermisoNotificaciones() {
         alert("Tu navegador no soporta notificaciones nativas.");
     }
 }
-
 function verificarBloqueoSeguridad() {
     const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('catalogo') === 'true') {
-        const loader = document.getElementById('loader-pantalla');
-        if(loader) loader.style.display = 'none';
+    const loader = document.getElementById('loader-pantalla');
+    
+    // Función para quitar la pantalla de carga inmediatamente
+    const quitarLoader = () => {
+        if (loader && loader.style.display !== 'none') {
+            loader.style.opacity = '0';
+            setTimeout(() => { loader.style.display = 'none'; }, 400);
+        }
+    };
+
+    if (urlParams.get('catalogo') === 'true') {
+        quitarLoader();
         return;
     }
     
     const authTime = localStorage.getItem('perfuma2_auth_time');
     const ahora = Date.now();
-    
-    setTimeout(() => {
-        const loader = document.getElementById('loader-pantalla');
-        if(loader && loader.style.display !== 'none') {
-            loader.style.opacity = '0';
-            setTimeout(() => { loader.style.display = 'none'; }, 800);
-            if (!authTime || (ahora - parseInt(authTime)) >= 86400000) {
-                document.getElementById('modal-login').style.display = 'flex';
-            } else {
-                document.getElementById('app-admin').style.display = 'block';
-            }
-        }
-    }, 3000);
+    const sesionValida = authTime && (ahora - parseInt(authTime)) < 86400000;
 
-    if (authTime && (ahora - parseInt(authTime)) < 86400000) {
-        document.getElementById('modal-login').style.display = 'none';
-        document.getElementById('app-admin').style.display = 'block';
-    } else {
-        document.getElementById('modal-login').style.display = 'flex';
-    }
+    // Timeout de seguridad: máximo 1.5 segundos de pantalla de carga
+    setTimeout(() => {
+        quitarLoader();
+        if (sesionValida) {
+            document.getElementById('modal-login').style.display = 'none';
+            document.getElementById('app-admin').style.display = 'block';
+        } else {
+            document.getElementById('modal-login').style.display = 'flex';
+        }
+    }, 1200);
 }
 
 function verificarPIN() {
