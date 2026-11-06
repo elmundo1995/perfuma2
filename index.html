@@ -1506,16 +1506,30 @@ db.ref('perfuma2_cloud').on('value', (snapshot) => {
                 accionFn: () => cambiarTab('pedidos')
             });
 
-            // 2. Notificación Push Nativa del Sistema
+            // 2. Notificación Nativa del Sistema Operativo (Pantalla de bloqueo y barra de estado)
             if ("Notification" in window && Notification.permission === "granted") {
-                try {
-                    const notif = new Notification("🚨 ¡Nuevo Pedido Web!", {
-                        body: `${ultimoPedido.cliente || 'Un cliente'} ha solicitado un pedido por $${Number(ultimoPedido.total).toFixed(2)}.`,
-                        icon: "logo.jpg.jpg",
-                        tag: "perfuma2-pedido"
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification("🚨 ¡NUEVO PEDIDO WEB!", {
+                            body: `${ultimoPedido.cliente || 'Un cliente'} ha solicitado un pedido por $${Number(ultimoPedido.total).toFixed(2)}.`,
+                            icon: "logo.jpg.jpg",
+                            badge: "logo.jpg.jpg",
+                            vibrate: [200, 100, 200, 100, 400],
+                            tag: "perfuma2-pedido",
+                            renotify: true,
+                            requireInteraction: true
+                        });
                     });
-                    notif.onclick = function() { window.focus(); cambiarTab('pedidos'); };
-                } catch(err) {}
+                } else {
+                    try {
+                        const notif = new Notification("🚨 ¡Nuevo Pedido Web!", {
+                            body: `${ultimoPedido.cliente || 'Un cliente'} ha solicitado un pedido por $${Number(ultimoPedido.total).toFixed(2)}.`,
+                            icon: "logo.jpg.jpg",
+                            tag: "perfuma2-pedido"
+                        });
+                        notif.onclick = function() { window.focus(); cambiarTab('pedidos'); };
+                    } catch(err) {}
+                }
             }
         }
         pedidosPreviosLength = pedidosWeb.length;
@@ -2742,14 +2756,47 @@ function abrirModalCarritoPublico() {
 
 function enviarPedidoWeb() {
     if(carritoPublico.length === 0) return alert("Carrito vacío");
-    const nom = document.getElementById('cat-cli-nombre').value.trim(), tel = document.getElementById('cat-cli-tel').value.trim();
-    if(!nom || !tel) return alert("Faltan datos");
-    const pedido = { id: 'web_'+Date.now(), fecha: new Date().toLocaleString(), cliente: nom, telefono: tel, items: [...carritoPublico], total: carritoPublico.reduce((s,i)=>s+i.subtotal,0), timestamp: Date.now() };
-    db.ref('perfuma2_cloud/pedidos').push(pedido).then(()=>{
-        alert("✅ Pedido enviado con éxito");
+    const nom = document.getElementById('cat-cli-nombre').value.trim();
+    const tel = document.getElementById('cat-cli-tel').value.trim();
+    const dir = document.getElementById('cat-cli-dir') ? document.getElementById('cat-cli-dir').value.trim() : '';
+    if(!nom || !tel) return alert("Por favor ingresa tu Nombre y Teléfono.");
+    
+    const tot = carritoPublico.reduce((s,i)=>s+i.subtotal,0);
+    const tasa = obtenerTasaActiva();
+    const totBs = (tot * tasa).toFixed(2);
+    const itemsResumen = carritoPublico.map(i => `• ${i.cantidad}x ${i.nombre} ($${Number(i.subtotal).toFixed(2)})`).join('\n');
+
+    const pedido = { 
+        id: 'web_' + Date.now(), 
+        fecha: new Date().toLocaleString(), 
+        cliente: nom, 
+        telefono: tel, 
+        direccion: dir,
+        items: [...carritoPublico], 
+        total: tot, 
+        timestamp: Date.now() 
+    };
+
+    db.ref('perfuma2_cloud/pedidos').push(pedido).then(() => {
+        alert("✅ ¡Pedido registrado con éxito! Te redirigiremos a WhatsApp para confirmar.");
         carritoPublico = [];
         document.getElementById('modal-carrito-pub').style.display = 'none';
         renderCatalogoPublico();
+
+        // Enviar notificación directa al WhatsApp de la tienda para que suene en la pantalla de bloqueo
+        const textoWhatsApp = `🛒 *NUEVO PEDIDO WEB PERFUMA2* 🛒\n\n` +
+                              `👤 *Cliente:* ${nom}\n` +
+                              `📱 *Teléfono:* ${tel}\n` +
+                              (dir ? `📍 *Dirección:* ${dir}\n` : '') +
+                              `\n*Artículos Solicitados:*\n${itemsResumen}\n\n` +
+                              `💰 *Total:* $${tot.toFixed(2)} (Bs. ${totBs})\n\n` +
+                              `_Hola, quiero confirmar la disponibilidad y coordinar la entrega de este pedido._`;
+        
+        let waTienda = (numeroWhatsAppTienda || "584120551688").replace(/\D/g, '');
+        if (waTienda.startsWith('0')) waTienda = '58' + waTienda.substring(1);
+        window.open(`https://wa.me/${waTienda}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
+    }).catch(err => {
+        alert("⚠️ Hubo un error al registrar el pedido: " + err.message);
     });
 }
 
@@ -3106,4 +3153,4 @@ function actualizarBadgeAppExterior() {
 
 </script>
 </body>
-</htm
+</html>
