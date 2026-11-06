@@ -43,12 +43,13 @@
   body { margin: 0; padding: 16px; background: var(--bg-main); color: var(--text-main); font-size: 13px; }
   
   #version-badge-flotante {
-      position: fixed; bottom: 15px; right: 15px; background: rgba(0, 242, 214, 0.15);
-      border: 2px solid var(--accent); color: var(--accent); padding: 8px 16px;
+      position: fixed; top: 14px; right: 14px; background: rgba(0, 242, 214, 0.12);
+      border: 1.5px solid var(--accent); color: var(--accent); padding: 6px 14px;
       border-radius: 30px; font-size: 11px; font-weight: 900; z-index: 999999;
       cursor: pointer; pointer-events: auto; backdrop-filter: blur(10px);
-      box-shadow: 0 0 20px rgba(0, 242, 214, 0.4), inset 0 0 10px rgba(0, 242, 214, 0.2);
+      box-shadow: 0 0 15px rgba(0, 242, 214, 0.35), inset 0 0 8px rgba(0, 242, 214, 0.15);
       animation: neonGlow 2s infinite alternate;
+      letter-spacing: 0.5px;
   }
   @keyframes neonGlow {
       0% { box-shadow: 0 0 10px rgba(0, 242, 214, 0.3); }
@@ -298,7 +299,7 @@
 </head>
 <body>
 
-<div id="version-badge-flotante" onclick="abrirModalActualizador()" style="cursor: pointer; pointer-events: auto;">🔔 v.95 oyamh95</div>
+<div id="version-badge-flotante" onclick="abrirModalActualizador()" style="cursor: pointer; pointer-events: auto;" title="Configuración y Actualizador">🔔 oyamh95</div>
 
 <div id="loader-pantalla">
     <div class="logo-3d-wrapper">
@@ -460,12 +461,13 @@ setTimeout(function() {
         <p style="margin:0; font-size:12px; color:var(--text-muted); font-weight:700;">Descarga respaldos offline de seguridad, cierre de caja y link del catálogo.</p>
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn-primary" style="background:var(--success); color:#070b14; font-weight:900;" onclick="descargarRespaldoJSON()">💾 Descargar Respaldo JSON</button>
-          <button class="btn-secondary" style="border-color:var(--warning); color:var(--warning); font-weight:900;" onclick="document.getElementById('input-restaurar-json').click()">📂 Restaurar Respaldo</button>
+          <button class="btn-primary" style="background:var(--success); color:#070b14; font-weight:900;" onclick="abrirModalHistorialRespaldos()">☁️ Puntos de Respaldo Nube (7 Max)</button>
+          <button class="btn-secondary" style="border-color:var(--accent); color:var(--accent); font-weight:900;" onclick="descargarRespaldoJSON()">💾 Descargar Respaldo JSON</button>
+          <button class="btn-secondary" style="border-color:var(--warning); color:var(--warning); font-weight:900;" onclick="document.getElementById('input-restaurar-json').click()">📂 Restaurar Archivo JSON</button>
           <input type="file" id="input-restaurar-json" accept=".json" style="display:none;" onchange="restaurarRespaldoJSON(this)">
           
-          <button class="btn-secondary" style="border-color:var(--info); color:var(--info); font-weight:900;" onclick="copiarLinkCatalogo()">🔗 Copiar Link Catálogo</button>
-          <button class="btn-primary" style="background:var(--info); color:#fff; font-weight:900;" onclick="generarCierreCaja()">Generar Reporte de Hoy</button>
+          <button class="btn-secondary" style="border-color:var(--info); color:var(--info); font-weight:900;" onclick="copiarLinkCatalogo()">🔗 Link Catálogo</button>
+          <button class="btn-primary" style="background:var(--info); color:#fff; font-weight:900;" onclick="generarCierreCaja()">Reporte de Hoy</button>
       </div>
     </div>
 
@@ -1180,6 +1182,32 @@ setTimeout(function() {
 
 </div>
 
+
+<!-- MODAL DE HISTORIAL DE RESPALDOS EN LA NUBE (ROTACIÓN DE 7 RESPALDOS) -->
+<div id="modal-respaldos-cloud" class="modal-overlay">
+  <div class="modal-box" style="border-color: var(--success); max-width: 520px;">
+    <button class="btn-close-modal" onclick="document.getElementById('modal-respaldos-cloud').style.display='none'">✖</button>
+    <h3 style="margin-top:0; color:var(--success); font-weight:900; display:flex; align-items:center; gap:8px;">
+      <span>💾 Puntos de Restauración en la Nube</span>
+    </h3>
+    <p style="color:var(--text-muted); font-size:12px; margin-bottom:14px;">
+      El sistema conserva automáticamente los últimos <b>7 respaldos</b>. Al crearse uno nuevo, el más viejo se elimina para mantener la base de datos ligera.
+    </p>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <button class="btn-primary" onclick="crearPuntoRespaldoNube(true)" style="background:var(--success); color:#070b14; font-weight:900; padding:8px 14px; font-size:11px;">
+        + Crear Respaldo Ahora
+      </button>
+      <span style="font-size:11px; color:var(--text-muted); font-weight:700;" id="contador-respaldos-cloud">Cargando...</span>
+    </div>
+
+    <div id="lista-respaldos-cloud-contenedor" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:10px;">
+      <div style="text-align:center; color:var(--text-muted); padding:20px;">Cargando respaldos de Firebase...</div>
+    </div>
+  </div>
+</div>
+
+
 <!-- MODALES -->
 <!-- MODAL DE ACTUALIZACIÓN Y ROLLBACK (ACCESO DESDE BADGE FLOTANTE) -->
 <div id="modal-actualizador" class="modal-overlay">
@@ -1619,7 +1647,7 @@ db.ref('perfuma2_version_control').on('value', (snapshot) => {
   if (vc) {
     if (vc.versionActual) {
       const badge = document.getElementById('version-badge-flotante');
-      if (badge) badge.innerHTML = `🔔 ${vc.versionActual}`;
+      if (badge) badge.innerHTML = `🔔 oyamh95`;
     }
     if (vc.codigoActual && typeof vc.codigoActual === 'string' && vc.codigoActual.trim().length > 0) {
       try {
@@ -1767,8 +1795,9 @@ function guardarCambiosEnNube(esManual = false) {
         statusEl.style.color = "var(--success)";
       }
       if (esManual) {
+        crearPuntoRespaldoNube(false);
         if (typeof reproducirSonido === 'function') reproducirSonido('exito');
-        alert("✅ ¡Datos guardados exitosamente en la nube!");
+        alert("✅ ¡Datos guardados y punto de respaldo generado en la nube!");
       }
     })
     .catch((err) => {
@@ -3573,6 +3602,134 @@ async function descargarTarjetaCobroPNG() {
     } catch(e) {
         alert("❌ Error al exportar la imagen.");
     }
+}
+
+
+
+// ============================================================================
+// SISTEMA DE RESPALDOS INTELIGENTES EN LA NUBE (MÁXIMO 7 - AUTO-LIMPIEZA)
+// ============================================================================
+function crearPuntoRespaldoNube(esManual = false) {
+    if (!nubeCargada || isCatalogoPublico) return;
+    
+    const paqueteRespaldo = {
+        fechaHora: new Date().toLocaleString('es-VE'),
+        timestamp: Date.now(),
+        inventario: safeArray(inventario),
+        ventas: safeArray(ventas),
+        gastos: safeArray(gastos),
+        pedidos: safeArray(pedidosWeb),
+        tasaBCV: Number(tasaBCV),
+        tasaUSDT: Number(tasaUSDT),
+        totalProductos: inventario.length,
+        totalVentas: ventas.length
+    };
+
+    const keyBk = 'bk_' + Date.now();
+
+    db.ref('perfuma2_respaldos/' + keyBk).set(paqueteRespaldo).then(() => {
+        // Ejecutar rotación: conservar máximo 7 respaldos borrando los más viejos
+        rotarRespaldosViejosCloud();
+
+        if (esManual) {
+            reproducirSonido('exito');
+            alert("✅ ¡Punto de restauración creado con éxito en la nube!");
+            abrirModalHistorialRespaldos();
+        }
+    }).catch(err => {
+        console.error("Error al guardar respaldo:", err);
+        if (esManual) alert("⚠️ Error al crear respaldo en la nube: " + err.message);
+    });
+}
+
+function rotarRespaldosViejosCloud() {
+    db.ref('perfuma2_respaldos').once('value', (snap) => {
+        const data = snap.val() || {};
+        const keys = Object.keys(data).sort(); // Orden ascendente cronológico
+
+        const MAX_RESPALDOS = 7;
+        if (keys.length > MAX_RESPALDOS) {
+            const keysABorrar = keys.slice(0, keys.length - MAX_RESPALDOS);
+            keysABorrar.forEach(k => {
+                db.ref('perfuma2_respaldos/' + k).remove();
+            });
+            console.log(`🧹 Auto-limpieza de respaldos: se eliminaron ${keysABorrar.length} respaldo(s) viejo(s).`);
+        }
+    });
+}
+
+function abrirModalHistorialRespaldos() {
+    const modal = document.getElementById('modal-respaldos-cloud');
+    const cont = document.getElementById('lista-respaldos-cloud-contenedor');
+    const badge = document.getElementById('contador-respaldos-cloud');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    cont.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">Consultando respaldos en Firebase...</div>`;
+
+    db.ref('perfuma2_respaldos').once('value', (snap) => {
+        const data = snap.val() || {};
+        const keys = Object.keys(data).sort().reverse(); // Más recientes primero
+
+        if (badge) badge.innerText = `${keys.length} / 7 guardados`;
+
+        if (keys.length === 0) {
+            cont.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No hay respaldos guardados en la nube. ¡Crea el primero!</div>`;
+            return;
+        }
+
+        cont.innerHTML = keys.map((k, index) => {
+            const item = data[k];
+            const numProd = item.totalProductos || (item.inventario ? item.inventario.length : 0);
+            const numVentas = item.totalVentas || (item.ventas ? item.ventas.length : 0);
+            return `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:900; color:#fff; font-size:12px;">📅 ${item.fechaHora || k}</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                        📦 ${numProd} perfumes | 💳 ${numVentas} ventas
+                    </div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-primary" onclick="restaurarRespaldoNubeEspecifico('${k}')" style="background:rgba(6,214,160,0.15); border:1px solid var(--success); color:var(--success); padding:6px 10px; font-size:10px; font-weight:900;">
+                        ⏪ Restaurar
+                    </button>
+                    <button class="btn-danger" onclick="eliminarRespaldoNubeIndividual('${k}')" style="padding:6px 8px; font-size:10px;">
+                        🗑️
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+    });
+}
+
+function restaurarRespaldoNubeEspecifico(keyBk) {
+    if (!confirm("⚠️ ¿Deseas restaurar el sistema a este punto en el tiempo? Reemplazará los datos actuales y sincronizará.")) return;
+
+    db.ref('perfuma2_respaldos/' + keyBk).once('value', (snap) => {
+        const b = snap.val();
+        if (!b) return alert("❌ No se encontró el respaldo seleccionado.");
+
+        if (b.inventario) inventario = safeArray(b.inventario);
+        if (b.ventas) ventas = safeArray(b.ventas);
+        if (b.gastos) gastos = safeArray(b.gastos);
+        if (b.pedidos) pedidosWeb = safeArray(b.pedidos);
+        if (b.tasaBCV) tasaBCV = Number(b.tasaBCV);
+        if (b.tasaUSDT) tasaUSDT = Number(b.tasaUSDT);
+
+        guardarCambiosEnNube(false);
+        renderTodo();
+        reproducirSonido('exito');
+        document.getElementById('modal-respaldos-cloud').style.display = 'none';
+        alert(`✅ ¡Sistema restaurado exitosamente al punto del ${b.fechaHora}!`);
+    });
+}
+
+function eliminarRespaldoNubeIndividual(keyBk) {
+    if (!confirm("¿Eliminar este respaldo de la nube?")) return;
+    db.ref('perfuma2_respaldos/' + keyBk).remove().then(() => {
+        abrirModalHistorialRespaldos();
+    });
 }
 
 
