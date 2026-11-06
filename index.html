@@ -8,6 +8,9 @@
 <!-- Configuración de Íconos y PWA -->
 <link rel="icon" type="image/jpeg" href="logo.jpg.jpg">
 <link rel="apple-touch-icon" href="logo.jpg.jpg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#070b14">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PERFUMA2">
@@ -2901,6 +2904,16 @@ function copiarTextoAlPortapapeles(txt) {
 
 
 window.onload = function() { verificarBloqueoSeguridad(); try { inicializarDatosPagoMovilUI(); } catch(e){} };
+
+// Registro de Service Worker para habilitar botón de instalación nativa PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('Service Worker registrado:', reg.scope))
+      .catch(err => console.log('Error registrando Service Worker:', err));
+  });
+}
+
 </script>
 </body>
 </html>
