@@ -972,7 +972,7 @@
     </div>
   </div>
 
-    <!-- ASISTENTE IA GEMINI COPILOT -->
+      <!-- ASISTENTE IA GEMINI COPILOT -->
   <div id="tab-ia" class="tab-content">
     <div class="card-panel" style="border-color: var(--info); box-shadow: 0 8px 30px rgba(58,134,255,0.2);">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
@@ -980,43 +980,181 @@
         <span style="background:rgba(58,134,255,0.15); border:1px solid var(--info); color:var(--info); padding:4px 10px; border-radius:20px; font-size:10px; font-weight:900;">ACTIVO EN TIEMPO REAL</span>
       </div>
       <p style="color:var(--text-muted); font-size:12px; font-weight:700; margin-bottom:16px;">
-        Pídele al asistente que busque, agregue o modifique perfumes, genere datos de Pago Móvil con tasa del día o emita alertas sonoras.
+        Genera tarjetas de cobro digitales de alta calidad con marca de agua 3D, calcula tasas en vivo y envía datos a clientes por texto o imagen a WhatsApp.
       </p>
 
       <!-- Consola de Comandos de IA -->
       <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:2px solid var(--info); margin-bottom:18px;">
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <input type="text" id="ia-prompt-input" class="user-input" placeholder="Ej: 'Buscar Asad', 'Pago móvil a Joangel $25', 'Agregar perfume Nautica costo 15 venta 25 stock 3'..." style="flex:3; min-width:260px;" onkeydown="if(event.key==='Enter') ejecutarComandoIA()">
+          <input type="text" id="ia-prompt-input" class="user-input" placeholder="Ej: 'Cobrar cuota a Alexander $25', 'Buscar Asad', 'Alerta sonora'..." style="flex:3; min-width:260px;" onkeydown="if(event.key==='Enter') ejecutarComandoIA()">
           <button class="btn-primary" onclick="ejecutarComandoIA()" style="background:var(--info); color:#fff; font-weight:900; padding:12px 18px;">⚡ Ejecutar Orden</button>
         </div>
 
-        <!-- Botones de Acción Rápida 1-Clic -->
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
           <button class="btn-secondary" onclick="comandoRapidoIA('alertas_stock')" style="font-size:11px; padding:6px 10px;">📉 Alerta Stock Crítico</button>
           <button class="btn-secondary" onclick="comandoRapidoIA('deudores_hoy')" style="font-size:11px; padding:6px 10px;">🔔 Lista de Cobranza Hoy</button>
-          <button class="btn-secondary" onclick="comandoRapidoIA('generar_pm_modal')" style="font-size:11px; padding:6px 10px; border-color:var(--success); color:var(--success);">📲 Crear Datos Pago Móvil</button>
-          <button class="btn-secondary" onclick="reproducirSonido('timbre')" style="font-size:11px; padding:6px 10px;">🔊 Probar Alarma Sonora</button>
+          <button class="btn-secondary" onclick="abrirGeneradorCobroDirecto()" style="font-size:11px; padding:6px 10px; border-color:var(--success); color:var(--success); font-weight:900;">💳 Generar Cobro (Tarjeta/Texto)</button>
+          <button class="btn-secondary" onclick="reproducirSonido('timbre')" style="font-size:11px; padding:6px 10px;">🔊 Probar Alarma</button>
         </div>
       </div>
 
-      <!-- Cuadro de Respuesta Inteligente -->
-      <div id="ia-respuesta-caja" style="display:none; background:#070b14; border:2px solid var(--accent); border-radius:12px; padding:18px; margin-bottom:18px; box-shadow: 0 0 20px rgba(0,242,214,0.15);">
+      <!-- Cuadro de Respuesta de Comandos -->
+      <div id="ia-respuesta-caja" style="display:none; background:#070b14; border:2px solid var(--accent); border-radius:12px; padding:18px; margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <b style="color:var(--accent); font-size:13px;" id="ia-respuesta-titulo">💡 Respuesta del Agente:</b>
+          <b style="color:var(--accent); font-size:13px;" id="ia-respuesta-titulo">💡 Resultado:</b>
           <button onclick="document.getElementById('ia-respuesta-caja').style.display='none'" class="btn-secondary" style="padding:2px 8px; font-size:10px;">Cerrar</button>
         </div>
         <div id="ia-respuesta-contenido" style="font-size:13px; line-height:1.5; color:#fff;"></div>
       </div>
 
-      <!-- Configuración de Pago Móvil para el Asistente -->
-      <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:18px;">
-        <h4 style="margin:0 0 10px 0; color:var(--success); font-weight:900;">💳 Datos Bancarios para Pago Móvil Automático</h4>
+      <!-- GENERADOR INTELIGENTE DE DATOS Y TARJETA DE PAGO -->
+      <div class="card-panel" style="border: 2px solid var(--accent); background: linear-gradient(135deg, rgba(17,26,46,0.9), rgba(7,11,20,0.95)); padding: 20px; border-radius: 14px; margin-bottom: 20px;">
+        <h3 class="card-title" style="color:var(--accent); display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <span>🎨 Generador de Cobros con Tarjeta 3D</span>
+        </h3>
+        
         <div class="form-grid">
-          <div class="form-group"><label>Banco</label><input type="text" id="cfg-pm-banco" class="user-input" placeholder="Ej: Banesco (0134)"></div>
-          <div class="form-group"><label>Cédula / RIF</label><input type="text" id="cfg-pm-cedula" class="user-input" placeholder="Ej: V-24163492"></div>
-          <div class="form-group"><label>Teléfono Pago Móvil</label><input type="text" id="cfg-pm-telefono" class="user-input" placeholder="Ej: 04120551688"></div>
+          <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" id="gc-cliente" class="user-input" placeholder="Nombre del cliente" list="lista-clientes-autofill" oninput="autollenarDatosClienteCobro()">
+            <datalist id="lista-clientes-autofill"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Teléfono Cliente</label>
+            <input type="text" id="gc-telefono" class="user-input" placeholder="WhatsApp (Ej: 0412...)">
+          </div>
+          <div class="form-group">
+            <label>Tipo de Pago / Concepto</label>
+            <select id="gc-concepto" class="user-input" onchange="actualizarPrevisualizacionTarjetaCobro()">
+              <option value="Pago de Cuota / Abono">💵 Pago de Cuota / Abono</option>
+              <option value="Nuevo Pedido / Compra">📦 Nuevo Pedido / Compra</option>
+              <option value="Saldo Restante / Liquidación">⏳ Saldo Restante / Liquidación</option>
+              <option value="Compra de Decants / Muestras">🧪 Compra de Decants / Muestras</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Método de Pago a Incluir</label>
+            <select id="gc-metodo" class="user-input" onchange="actualizarPrevisualizacionTarjetaCobro()">
+              <option value="todos">✨ Todos los Métodos Disponibles</option>
+              <option value="pagomovil">📱 Solo Pago Móvil</option>
+              <option value="zelle">💵 Solo Zelle</option>
+              <option value="binance">🟡 Solo Binance Pay (USDT)</option>
+              <option value="transferencia">🏦 Solo Transferencia Bs</option>
+              <option value="efectivo">💵 Solo Efectivo ($)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monto a Cobrar ($ USD)</label>
+            <input type="number" step="0.01" id="gc-monto" class="user-input" value="25.00" oninput="actualizarPrevisualizacionTarjetaCobro()">
+          </div>
+          <div class="form-group">
+            <label>Nota Opcional</label>
+            <input type="text" id="gc-nota" class="user-input" placeholder="Ej: Cuota 2 de Coach Men" oninput="actualizarPrevisualizacionTarjetaCobro()">
+          </div>
+        </div>
+
+        <!-- TARJETA DIGITAL DE COBRO PARA RENDERIZAR EN IMAGEN (Watermark con logo repetido) -->
+        <div style="display:flex; justify-content:center; margin: 20px 0;">
+          <div id="tarjeta-cobro-render" style="
+              width: 100%; 
+              max-width: 440px; 
+              background: #090f1d; 
+              border: 3px solid #00f2d6; 
+              border-radius: 20px; 
+              padding: 24px; 
+              color: #ffffff; 
+              position: relative; 
+              overflow: hidden; 
+              box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(0,242,214,0.3);
+              font-family: 'Segoe UI', system-ui, sans-serif;
+          ">
+            <!-- MARCA DE AGUA DEL LOGO REPETIDA EN EL FONDO (Watermark 3D) -->
+            <div style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0.04; pointer-events:none; display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 15px; transform: rotate(-15deg) scale(1.15);">
+                <img src="logo.jpg.jpg" style="width:100%;">
+                <img src="logo.jpg.jpg" style="width:100%;">
+                <img src="logo.jpg.jpg" style="width:100%;">
+                <img src="logo.jpg.jpg" style="width:100%;">
+                <img src="logo.jpg.jpg" style="width:100%;">
+                <img src="logo.jpg.jpg" style="width:100%;">
+            </div>
+
+            <!-- Cabecera con Logo 3D -->
+            <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; border-bottom: 2px dashed rgba(0,242,214,0.3); padding-bottom:14px; margin-bottom:16px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:55px; height:55px; border-radius:50%; border:2px solid #00f2d6; overflow:hidden; box-shadow:0 0 15px rgba(0,242,214,0.5);">
+                  <img src="logo.jpg.jpg" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div>
+                  <div style="font-size:22px; font-weight:900; color:#00f2d6; letter-spacing:1px; line-height:1;">PERFUMA2</div>
+                  <div style="font-size:10px; color:#94a3b8; font-weight:800; text-transform:uppercase; margin-top:3px;">Boutique de Fragancias</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <span id="tc-badge-concepto" style="background:rgba(0,242,214,0.15); border:1px solid #00f2d6; color:#00f2d6; font-size:10px; font-weight:900; padding:4px 10px; border-radius:20px; text-transform:uppercase;">Pago de Cuota</span>
+              </div>
+            </div>
+
+            <!-- Destinatario y Monto -->
+            <div style="position:relative; z-index:2; margin-bottom:16px;">
+              <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+                <span style="color:#94a3b8;">Cliente:</span>
+                <b id="tc-nombre-cliente" style="color:#fff;">Cliente General</b>
+              </div>
+              <div id="tc-box-nota" style="font-size:11px; color:#ffb703; font-weight:700; margin-bottom:10px;"></div>
+
+              <div style="background: rgba(0, 242, 214, 0.08); border: 2px solid rgba(0, 242, 214, 0.4); border-radius: 14px; padding: 14px; text-align: center;">
+                <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:900; letter-spacing:1px;">Total a Transferir</div>
+                <div id="tc-monto-usd" style="font-size:32px; font-weight:900; color:#fff; line-height:1.2; text-shadow:0 0 15px rgba(255,255,255,0.4);">$25.00</div>
+                <div id="tc-monto-bs" style="font-size:15px; font-weight:900; color:#00f2d6; margin-top:2px; text-shadow:0 0 10px rgba(0,242,214,0.5);">Bs. 0.00</div>
+                <div id="tc-tasa-info" style="font-size:10px; color:#94a3b8; margin-top:4px;">Tasa activa: 0.00 Bs</div>
+              </div>
+            </div>
+
+            <!-- Cuentas Bancarias Disponibles -->
+            <div id="tc-contenedor-cuentas" style="position:relative; z-index:2; display:flex; flex-direction:column; gap:8px;"></div>
+
+            <!-- Pie de Tarjeta -->
+            <div style="position:relative; z-index:2; text-align:center; font-size:10px; color:#64748b; margin-top:14px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:8px; font-weight:700;">
+              Por favor enviar el comprobante de pago por este medio. ¡Muchas gracias!
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Elección para Enviar -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn-primary" onclick="enviarCobroWhatsApp('texto')" style="flex:1; min-width:180px; padding:14px; font-size:13px; font-weight:900; background:linear-gradient(135deg, var(--info), #1d4ed8);">
+            💬 Enviar Solo Texto a WhatsApp
+          </button>
+          <button class="btn-primary" onclick="enviarCobroWhatsApp('imagen')" style="flex:1.4; min-width:200px; padding:14px; font-size:13px; font-weight:900; background:linear-gradient(135deg, var(--success), #059669);">
+            🖼️ Enviar Imagen y Texto a WhatsApp
+          </button>
+          <button class="btn-secondary" onclick="descargarTarjetaCobroPNG()" style="flex:0.8; min-width:140px; padding:14px; font-size:13px; font-weight:900; border-color:var(--accent); color:var(--accent);">
+            💾 Descargar PNG
+          </button>
+        </div>
+      </div>
+
+      <!-- CONFIGURACIÓN GLOBAL DE TODOS LOS MÉTODOS DE PAGO -->
+      <div class="card-panel" style="border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); padding: 18px; border-radius: 12px;">
+        <h4 style="margin:0 0 12px 0; color:var(--success); font-weight:900; font-size:14px;">⚙️ Configurar Todas tus Cuentas de Pago</h4>
+        
+        <div class="form-grid">
+          <div class="form-group"><label style="color:var(--accent);">📱 Banco (Pago Móvil)</label><input type="text" id="cfg-pm-banco" class="user-input" placeholder="Ej: Banesco (0134)"></div>
+          <div class="form-group"><label style="color:var(--accent);">📱 Cédula / RIF (Pago Móvil)</label><input type="text" id="cfg-pm-cedula" class="user-input" placeholder="Ej: V-24163492"></div>
+          <div class="form-group"><label style="color:var(--accent);">📱 Teléfono (Pago Móvil)</label><input type="text" id="cfg-pm-telefono" class="user-input" placeholder="Ej: 04120551688"></div>
+        </div>
+
+        <div class="form-grid" style="margin-top:10px;">
+          <div class="form-group"><label style="color:var(--info);">💵 Correo Zelle</label><input type="text" id="cfg-zelle-correo" class="user-input" placeholder="Ej: pagos@perfuma2.com"></div>
+          <div class="form-group"><label style="color:var(--info);">💵 Titular Zelle</label><input type="text" id="cfg-zelle-titular" class="user-input" placeholder="Ej: Oyam Hernandez"></div>
+          <div class="form-group"><label style="color:var(--warning);">🟡 Binance Pay ID</label><input type="text" id="cfg-binance-id" class="user-input" placeholder="Ej: 123456789 (USDT)"></div>
+        </div>
+
+        <div class="form-grid" style="margin-top:10px;">
+          <div class="form-group"><label>🏦 Banco (Transferencia Bs)</label><input type="text" id="cfg-transf-banco" class="user-input" placeholder="Ej: Banco Mercantil"></div>
+          <div class="form-group"><label>🏦 Nro de Cuenta Corriente (20 Dígitos)</label><input type="text" id="cfg-transf-cuenta" class="user-input" placeholder="Ej: 0105-XXXX-XX-XXXXXXXXXX"></div>
           <div class="form-group" style="display:flex; align-items:flex-end;">
-            <button class="btn-primary" onclick="guardarConfigPagoMovil()" style="background:var(--success); color:#070b14; font-weight:900; width:100%; height:42px;">💾 Guardar Datos PM</button>
+            <button class="btn-primary" onclick="guardarConfigMetodosPagoCompleto()" style="background:var(--success); color:#070b14; font-weight:900; width:100%; height:42px;">💾 Guardar Todos los Métodos</button>
           </div>
         </div>
       </div>
@@ -3083,7 +3221,314 @@ function copiarTextoAlPortapapeles(txt) {
 }
 
 
-window.onload = function() { verificarBloqueoSeguridad(); try { inicializarDatosPagoMovilUI(); } catch(e){} };
+
+// ============================================================================
+// SISTEMA INTEGRAL DE COBROS MULTI-MÉTODO Y GENERADOR DE TARJETAS 3D
+// ============================================================================
+let configCuentasPago = {
+    pmBanco: localStorage.getItem('cfg_pm_banco') || 'Banesco (0134)',
+    pmCedula: localStorage.getItem('cfg_pm_cedula') || 'V-24163492',
+    pmTelefono: localStorage.getItem('cfg_pm_telefono') || '04120551688',
+    zelleCorreo: localStorage.getItem('cfg_zelle_correo') || 'pagos@perfuma2.com',
+    zelleTitular: localStorage.getItem('cfg_zelle_titular') || 'PERFUMA2 C.A.',
+    binanceId: localStorage.getItem('cfg_binance_id') || 'oyamh95 (Pay ID)',
+    transfBanco: localStorage.getItem('cfg_transf_banco') || 'Banesco',
+    transfCuenta: localStorage.getItem('cfg_transf_cuenta') || '0134-XXXX-XX-XXXXXXXXXX'
+};
+
+function inicializarConfigMetodosPagoUI() {
+    if (document.getElementById('cfg-pm-banco')) document.getElementById('cfg-pm-banco').value = configCuentasPago.pmBanco;
+    if (document.getElementById('cfg-pm-cedula')) document.getElementById('cfg-pm-cedula').value = configCuentasPago.pmCedula;
+    if (document.getElementById('cfg-pm-telefono')) document.getElementById('cfg-pm-telefono').value = configCuentasPago.pmTelefono;
+    if (document.getElementById('cfg-zelle-correo')) document.getElementById('cfg-zelle-correo').value = configCuentasPago.zelleCorreo;
+    if (document.getElementById('cfg-zelle-titular')) document.getElementById('cfg-zelle-titular').value = configCuentasPago.zelleTitular;
+    if (document.getElementById('cfg-binance-id')) document.getElementById('cfg-binance-id').value = configCuentasPago.binanceId;
+    if (document.getElementById('cfg-transf-banco')) document.getElementById('cfg-transf-banco').value = configCuentasPago.transfBanco;
+    if (document.getElementById('cfg-transf-cuenta')) document.getElementById('cfg-transf-cuenta').value = configCuentasPago.transfCuenta;
+    
+    poblarDatalistClientesCobro();
+    actualizarPrevisualizacionTarjetaCobro();
+}
+
+function guardarConfigMetodosPagoCompleto() {
+    configCuentasPago.pmBanco = document.getElementById('cfg-pm-banco').value.trim() || configCuentasPago.pmBanco;
+    configCuentasPago.pmCedula = document.getElementById('cfg-pm-cedula').value.trim() || configCuentasPago.pmCedula;
+    configCuentasPago.pmTelefono = document.getElementById('cfg-pm-telefono').value.trim() || configCuentasPago.pmTelefono;
+    configCuentasPago.zelleCorreo = document.getElementById('cfg-zelle-correo').value.trim() || configCuentasPago.zelleCorreo;
+    configCuentasPago.zelleTitular = document.getElementById('cfg-zelle-titular').value.trim() || configCuentasPago.zelleTitular;
+    configCuentasPago.binanceId = document.getElementById('cfg-binance-id').value.trim() || configCuentasPago.binanceId;
+    configCuentasPago.transfBanco = document.getElementById('cfg-transf-banco').value.trim() || configCuentasPago.transfBanco;
+    configCuentasPago.transfCuenta = document.getElementById('cfg-transf-cuenta').value.trim() || configCuentasPago.transfCuenta;
+
+    for (const [k, v] of Object.entries(configCuentasPago)) {
+        localStorage.setItem('p2_' + k, v);
+    }
+    db.ref('perfuma2_cloud/config_cuentas').set(configCuentasPago);
+    reproducirSonido('exito');
+    actualizarPrevisualizacionTarjetaCobro();
+    alert("✅ ¡Todas las cuentas bancarias fueron guardadas con éxito!");
+}
+
+function poblarDatalistClientesCobro() {
+    const dl = document.getElementById('lista-clientes-autofill');
+    if (!dl) return;
+    const mapa = {};
+    ventas.forEach(v => {
+        if (v && v.cliente) mapa[v.cliente.trim()] = v.telefono || '';
+    });
+    dl.innerHTML = Object.keys(mapa).map(c => `<option value="${c}">${mapa[c] ? `(${mapa[c]})` : ''}</option>`).join('');
+}
+
+function autollenarDatosClienteCobro() {
+    const nom = document.getElementById('gc-cliente').value.trim().toLowerCase();
+    const v = ventas.find(x => x && x.cliente && x.cliente.toLowerCase() === nom);
+    if (v) {
+        if (v.telefono && document.getElementById('gc-telefono')) document.getElementById('gc-telefono').value = v.telefono;
+        let pend = Math.max(0, Number(v.total || 0) - Number(v.abonado || 0));
+        if (pend > 0 && document.getElementById('gc-monto')) {
+            document.getElementById('gc-monto').value = pend.toFixed(2);
+            document.getElementById('gc-concepto').value = 'Pago de Cuota / Abono';
+            if (document.getElementById('gc-nota')) document.getElementById('gc-nota').value = `Cuota pendiente - ${v.productoResumen || ''}`;
+        }
+    }
+    actualizarPrevisualizacionTarjetaCobro();
+}
+
+function abrirGeneradorCobroDirecto(clienteVenta = null) {
+    cambiarTab('ia');
+    if (clienteVenta) {
+        document.getElementById('gc-cliente').value = clienteVenta.cliente || '';
+        document.getElementById('gc-telefono').value = clienteVenta.telefono || '';
+        let pend = Math.max(0, Number(clienteVenta.total || 0) - Number(clienteVenta.abonado || 0));
+        document.getElementById('gc-monto').value = (pend > 0 ? pend : Number(clienteVenta.total || 0)).toFixed(2);
+        document.getElementById('gc-concepto').value = pend > 0 ? 'Pago de Cuota / Abono' : 'Nuevo Pedido / Compra';
+        document.getElementById('gc-nota').value = clienteVenta.productoResumen || '';
+    }
+    actualizarPrevisualizacionTarjetaCobro();
+    document.getElementById('tarjeta-cobro-render').scrollIntoView({ behavior: 'smooth' });
+}
+
+function actualizarPrevisualizacionTarjetaCobro() {
+    const nom = (document.getElementById('gc-cliente') ? document.getElementById('gc-cliente').value.trim() : '') || 'Cliente General';
+    const concepto = document.getElementById('gc-concepto') ? document.getElementById('gc-concepto').value : 'Pago de Cuota / Abono';
+    const metodoSel = document.getElementById('gc-metodo') ? document.getElementById('gc-metodo').value : 'todos';
+    const monto = parseFloat(document.getElementById('gc-monto') ? document.getElementById('gc-monto').value : 0) || 0;
+    const nota = (document.getElementById('gc-nota') ? document.getElementById('gc-nota').value.trim() : '');
+    const tasa = obtenerTasaActiva();
+    const montoBs = (monto * tasa).toFixed(2);
+
+    if (document.getElementById('tc-nombre-cliente')) document.getElementById('tc-nombre-cliente').innerText = nom;
+    if (document.getElementById('tc-badge-concepto')) document.getElementById('tc-badge-concepto').innerText = concepto;
+    if (document.getElementById('tc-monto-usd')) document.getElementById('tc-monto-usd').innerText = `$${monto.toFixed(2)}`;
+    if (document.getElementById('tc-monto-bs')) document.getElementById('tc-monto-bs').innerText = `Bs. ${montoBs}`;
+    if (document.getElementById('tc-tasa-info')) document.getElementById('tc-tasa-info').innerText = `Tasa aplicada: ${tasa.toFixed(2)} Bs (${tipoTasaActiva.toUpperCase()})`;
+    
+    const boxNota = document.getElementById('tc-box-nota');
+    if (boxNota) {
+        if (nota) {
+            boxNota.style.display = 'block';
+            boxNota.innerText = `📌 Concepto: ${nota}`;
+        } else {
+            boxNota.style.display = 'none';
+        }
+    }
+
+    const cont = document.getElementById('tc-contenedor-cuentas');
+    if (!cont) return;
+
+    let htmlCuentas = '';
+    const itemStyle = "background:rgba(255,255,255,0.03); border:1px solid rgba(0,242,214,0.25); border-radius:10px; padding:10px; font-size:12px; line-height:1.4;";
+
+    if (metodoSel === 'todos' || metodoSel === 'pagomovil') {
+        htmlCuentas += `
+        <div style="${itemStyle}">
+            <b style="color:#00f2d6;">📱 PAGO MÓVIL:</b><br>
+            • Banco: <b>${configCuentasPago.pmBanco}</b><br>
+            • Cédula/RIF: <b>${configCuentasPago.pmCedula}</b><br>
+            • Teléfono: <b>${configCuentasPago.pmTelefono}</b>
+        </div>`;
+    }
+
+    if (metodoSel === 'todos' || metodoSel === 'zelle') {
+        htmlCuentas += `
+        <div style="${itemStyle}">
+            <b style="color:#3a86ff;">💵 ZELLE ($ USD):</b><br>
+            • Correo: <b>${configCuentasPago.zelleCorreo}</b><br>
+            • Titular: <b>${configCuentasPago.zelleTitular}</b>
+        </div>`;
+    }
+
+    if (metodoSel === 'todos' || metodoSel === 'binance') {
+        htmlCuentas += `
+        <div style="${itemStyle}">
+            <b style="color:#ffb703;">🟡 BINANCE PAY (USDT):</b><br>
+            • Pay ID / Usuario: <b>${configCuentasPago.binanceId}</b>
+        </div>`;
+    }
+
+    if (metodoSel === 'todos' || metodoSel === 'transferencia') {
+        htmlCuentas += `
+        <div style="${itemStyle}">
+            <b style="color:#a855f7;">🏦 TRANSFERENCIA BANCARIA (Bs):</b><br>
+            • Banco: <b>${configCuentasPago.transfBanco}</b><br>
+            • Cuenta: <b>${configCuentasPago.transfCuenta}</b><br>
+            • Cédula: <b>${configCuentasPago.pmCedula}</b>
+        </div>`;
+    }
+
+    if (metodoSel === 'efectivo') {
+        htmlCuentas += `
+        <div style="${itemStyle}">
+            <b style="color:#06d6a0;">💵 EFECTIVO ($ USD):</b><br>
+            • Pago contraentrega en divisas en buen estado al recibir tu pedido.
+        </div>`;
+    }
+
+    cont.innerHTML = htmlCuentas;
+}
+
+function generarTextoWhatsAppCobro() {
+    const nom = (document.getElementById('gc-cliente') ? document.getElementById('gc-cliente').value.trim() : '') || 'Cliente';
+    const concepto = document.getElementById('gc-concepto') ? document.getElementById('gc-concepto').value : 'Pago';
+    const metodoSel = document.getElementById('gc-metodo') ? document.getElementById('gc-metodo').value : 'todos';
+    const monto = parseFloat(document.getElementById('gc-monto') ? document.getElementById('gc-monto').value : 0) || 0;
+    const nota = (document.getElementById('gc-nota') ? document.getElementById('gc-nota').value.trim() : '');
+    const tasa = obtenerTasaActiva();
+    const montoBs = (monto * tasa).toFixed(2);
+
+    let txt = `✨ *PERFUMA2 - DATOS DE PAGO* ✨\n\n` +
+              `Hola *${nom}*, un saludo cordial.\n` +
+              `Detalle de cobro correspondiente a: *${concepto}*\n` +
+              (nota ? `📌 *Concepto:* ${nota}\n` : '') +
+              `\n💰 *Total a pagar:* $${monto.toFixed(2)} (Bs. ${montoBs})\n` +
+              `📊 *Tasa del día:* ${tasa.toFixed(2)} Bs (${tipoTasaActiva.toUpperCase()})\n\n` +
+              `*CUENTAS DISPONIBLES PARA TRANSFERIR:*\n\n`;
+
+    if (metodoSel === 'todos' || metodoSel === 'pagomovil') {
+        txt += `📱 *PAGO MÓVIL:*\n` +
+               `• Banco: ${configCuentasPago.pmBanco}\n` +
+               `• Cédula: ${configCuentasPago.pmCedula}\n` +
+               `• Teléfono: ${configCuentasPago.pmTelefono}\n` +
+               `• Monto en Bs: *Bs. ${montoBs}*\n\n`;
+    }
+
+    if (metodoSel === 'todos' || metodoSel === 'zelle') {
+        txt += `💵 *ZELLE:*\n` +
+               `• Correo: ${configCuentasPago.zelleCorreo}\n` +
+               `• Titular: ${configCuentasPago.zelleTitular}\n` +
+               `• Monto: *$${monto.toFixed(2)} USD*\n\n`;
+    }
+
+    if (metodoSel === 'todos' || metodoSel === 'binance') {
+        txt += `🟡 *BINANCE PAY:*\n` +
+               `• Pay ID / Usuario: ${configCuentasPago.binanceId}\n` +
+               `• Monto: *$${monto.toFixed(2)} USDT*\n\n`;
+    }
+
+    if (metodoSel === 'todos' || metodoSel === 'transferencia') {
+        txt += `🏦 *TRANSFERENCIA BANCARIA (Bs):*\n` +
+               `• Banco: ${configCuentasPago.transfBanco}\n` +
+               `• Nro Cuenta: ${configCuentasPago.transfCuenta}\n` +
+               `• Cédula: ${configCuentasPago.pmCedula}\n` +
+               `• Monto: *Bs. ${montoBs}*\n\n`;
+    }
+
+    txt += `_Por favor enviar la captura del comprobante al realizar la transferencia. ¡Muchas gracias por tu confianza!_`;
+    return txt;
+}
+
+async function enviarCobroWhatsApp(tipoEnvio) {
+    const tel = (document.getElementById('gc-telefono') ? document.getElementById('gc-telefono').value : '').replace(/\D/g, '');
+    let telDestino = tel;
+    if (telDestino.startsWith('0')) telDestino = '58' + telDestino.substring(1);
+
+    const texto = generarTextoWhatsAppCobro();
+
+    if (tipoEnvio === 'texto') {
+        if (telDestino) {
+            window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(texto)}`, '_blank');
+        } else {
+            copiarTextoAlPortapapeles(texto);
+            window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+        }
+        reproducirSonido('exito');
+        return;
+    }
+
+    // Tipo: 'imagen' (Renderiza con html2canvas)
+    const cardEl = document.getElementById('tarjeta-cobro-render');
+    if (!cardEl) return;
+
+    try {
+        reproducirSonido('click');
+        const canvas = await html2canvas(cardEl, { scale: 3, backgroundColor: '#090f1d', useCORS: true });
+        
+        canvas.toBlob(async (blob) => {
+            if (!blob) return;
+            const nomCli = (document.getElementById('gc-cliente').value.trim() || 'Cliente').replace(/\s+/g, '_');
+            const file = new File([blob], `Cobro_PERFUMA2_${nomCli}.png`, { type: 'image/png' });
+
+            // 1. Intento con Web Share API (en teléfonos móviles permite compartir directo a WhatsApp con imagen y texto)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Tarjeta de Pago PERFUMA2',
+                        text: texto
+                    });
+                    return;
+                } catch(e) {}
+            }
+
+            // 2. Fallback: Copiar al portapapeles y descargar
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                }
+            } catch(e) {}
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Tarjeta_Cobro_${nomCli}.png`;
+            a.click();
+
+            alert("🖼️ ¡Tarjeta generada y copiada al portapapeles!
+
+Al abrirse WhatsApp, presiona 'Pegar' (Ctrl + V) para enviar la imagen junto con el texto.");
+            if (telDestino) {
+                window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(texto)}`, '_blank');
+            } else {
+                window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+            }
+        }, 'image/png');
+    } catch(err) {
+        console.error(err);
+        alert("⚠️ No se pudo renderizar la tarjeta en imagen. Se abrirá en formato texto.");
+        window.open(`https://wa.me/${telDestino}?text=${encodeURIComponent(texto)}`, '_blank');
+    }
+}
+
+async function descargarTarjetaCobroPNG() {
+    const cardEl = document.getElementById('tarjeta-cobro-render');
+    if (!cardEl) return;
+    try {
+        const canvas = await html2canvas(cardEl, { scale: 3, backgroundColor: '#090f1d', useCORS: true });
+        const nomCli = (document.getElementById('gc-cliente').value.trim() || 'Cliente').replace(/\s+/g, '_');
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Tarjeta_PERFUMA2_${nomCli}.png`;
+        a.click();
+        reproducirSonido('exito');
+        alert("✅ ¡Imagen de cobro PNG descargada con éxito!");
+    } catch(e) {
+        alert("❌ Error al exportar la imagen.");
+    }
+}
+
+
+window.onload = function() { verificarBloqueoSeguridad(); try { inicializarConfigMetodosPagoUI(); } catch(e){} };
 
 // Registro de Service Worker para habilitar botón de instalación nativa PWA
 if ('serviceWorker' in navigator) {
