@@ -627,64 +627,58 @@ setTimeout(function() {
 </div>
 
 <div id="app-admin" style="display:none;">
-  <div class="header-bar" style="padding-bottom:8px; margin-bottom:12px; gap:8px;">
-    <!-- Fila 1: Marca compacta + Estado sincronización mini -->
+    <div class="header-bar" style="padding-bottom:10px; margin-bottom:14px; gap:8px;">
+    <!-- Fila 1: Logo, Título y Micro-estado en línea -->
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <div class="logo-3d-wrapper">
-          <div class="logo-3d-circle" style="width: 46px; height: 46px;">
+          <div class="logo-3d-circle" style="width: 48px; height: 48px;">
             <img src="logo.jpg.jpg" alt="Logo" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
-            <div id="logo-fallback" style="display:none; color:#070b14; font-size:20px; font-weight:900;">🧴</div>
+            <div id="logo-fallback" style="display:none; color:#070b14; font-size:22px; font-weight:900;">🧴</div>
           </div>
         </div>
         <div>
-          <h1 class="brand-title" style="font-size: 20px; line-height: 1.1;">PERFUMA2</h1>
+          <h1 class="brand-title" style="font-size: 21px; line-height: 1.1;">PERFUMA2</h1>
           <div class="brand-subtitle" style="font-size: 10px;">v.95 oyamh95</div>
         </div>
       </div>
       
-      <!-- Micro-indicador de estado en la nube -->
+      <!-- Estado de sincronización en píldora pequeña -->
       <div id="cloud-status" style="font-size: 10px; font-weight: 800; color: var(--success); background: rgba(6,214,160,0.1); border: 1px solid rgba(6,214,160,0.3); padding: 3px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
         <span style="font-size: 7px;">●</span> En línea
       </div>
     </div>
     
     <div class="header-controls" style="width: 100%;">
-      <!-- Fila 2: Accesos rápidos alineados -->
-      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; width:100%; margin-bottom:4px;">
-        <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:10px; font-weight:900; border-radius:20px; padding:4px 9px;" title="Cambiar tema">🌙 Noche</button>
-        <div id="version-badge-flotante" onclick="abrirModalActualizador()" title="Configuración y Actualizador" style="padding:4px 9px; font-size:10px;">🔔 oyamh95</div>
-        <div id="reloj-sistema" style="font-size:10px; font-weight:800; background:rgba(0,242,214,0.08); padding:4px 9px; border-radius:20px; border:1px solid rgba(0,242,214,0.25);"></div>
+      <!-- Fila 2: Accesos rápidos -->
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; width:100%; margin-bottom:6px;">
+        <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:10px; font-weight:900; border-radius:20px; padding:5px 10px;" title="Cambiar tema">🌙 Noche</button>
+        <div id="version-badge-flotante" onclick="abrirModalActualizador()" title="Configuración y Actualizador" style="padding:5px 10px; font-size:10px;">🔔 oyamh95</div>
+        <div id="reloj-sistema" style="font-size:10px; font-weight:800; background:rgba(0,242,214,0.08); padding:5px 10px; border-radius:20px; border:1px solid rgba(0,242,214,0.25);"></div>
       </div>
       
-      <!-- Fila 3: Cajas de Tasa Modernas (sin checkbox tosco) + Botones directos -->
-      <div style="display:flex; align-items:center; gap:6px; width:100%;">
-        <!-- Chip Tasa BCV -->
-        <div class="tasa-box activa" id="box-tasa-bcv" onclick="alternarTipoTasa('bcv')" style="padding:5px 8px; flex:1; border-radius:10px;" title="Tocar para activar Tasa BCV">
+      <!-- Fila 3: Cajas limpias de Tasa BCV y USDT (sin puntos ni letras raras) -->
+      <div style="display:flex; align-items:center; gap:8px; width:100%;">
+        <!-- Caja BCV limpia -->
+        <div class="tasa-box activa" id="box-tasa-bcv" onclick="alternarTipoTasa('bcv')" style="padding:6px 10px; flex:1; border-radius:12px; cursor:pointer;" title="Toca para seleccionar Tasa BCV">
           <input type="checkbox" id="check-tasa-bcv" checked style="display:none;">
           <div style="width:100%;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1px;">
-              <span class="tasa-label" style="font-size:8px;">BCV (Bs)</span>
-              <span id="bcv-dot" style="font-size:8px; color:var(--accent); font-weight:900;">● ACT</span>
-            </div>
-            <input type="number" step="0.01" id="tasaBCVInput" class="tasa-input" style="font-size:13px; width:100%;" onchange="actualizarTasaManual('bcv')" onclick="event.stopPropagation()">
+            <span class="tasa-label" style="font-size:9px; font-weight:900;">BCV (Bs)</span>
+            <input type="number" step="0.01" id="tasaBCVInput" class="tasa-input" style="font-size:14px; width:100%; font-weight:900;" onchange="actualizarTasaManual('bcv')" onclick="event.stopPropagation()">
           </div>
         </div>
 
-        <!-- Chip Tasa USDT -->
-        <div class="tasa-box" id="box-tasa-usdt" onclick="alternarTipoTasa('usdt')" style="padding:5px 8px; flex:1; border-radius:10px;" title="Tocar para activar Tasa USDT">
+        <!-- Caja USDT limpia -->
+        <div class="tasa-box" id="box-tasa-usdt" onclick="alternarTipoTasa('usdt')" style="padding:6px 10px; flex:1; border-radius:12px; cursor:pointer;" title="Toca para seleccionar Tasa USDT">
           <input type="checkbox" id="check-tasa-usdt" style="display:none;">
           <div style="width:100%;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1px;">
-              <span class="tasa-label" style="font-size:8px;">USDT (Bs)</span>
-              <span id="usdt-dot" style="font-size:8px; color:var(--text-muted); font-weight:900;">○</span>
-            </div>
-            <input type="number" step="0.01" id="tasaUSDTInput" class="tasa-input" style="font-size:13px; width:100%;" onchange="actualizarTasaManual('usdt')" onclick="event.stopPropagation()">
+            <span class="tasa-label" style="font-size:9px; font-weight:900;">USDT (Bs)</span>
+            <input type="number" step="0.01" id="tasaUSDTInput" class="tasa-input" style="font-size:14px; width:100%; font-weight:900;" onchange="actualizarTasaManual('usdt')" onclick="event.stopPropagation()">
           </div>
         </div>
 
-        <button class="btn-primary" onclick="obtenerTasasAutomaticas(true)" style="background:var(--info); font-size:10px; padding:8px 9px; flex-shrink:0;" title="Actualizar Tasa BCV Ahora">🔄 Tasa</button>
-        <button id="btn-sync-manual" class="btn-primary" onclick="guardarCambiosEnNube(true)" style="font-size:10px; padding:8px 10px; flex-shrink:0;">☁️ Guardar</button>
+        <button class="btn-primary" onclick="obtenerTasasAutomaticas(true)" style="background:var(--info); font-size:11px; padding:10px 10px; flex-shrink:0;" title="Actualizar Tasa BCV Ahora">🔄 Tasa</button>
+        <button id="btn-sync-manual" class="btn-primary" onclick="guardarCambiosEnNube(true)" style="font-size:11px; padding:10px 12px; flex-shrink:0;">☁️ Guardar</button>
       </div>
     </div>
   </div>
@@ -704,20 +698,23 @@ setTimeout(function() {
 
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="tab-content active">
-    <div class="card-panel" style="padding:14px; margin-bottom:18px; border:1.5px solid var(--border-color); background:var(--bg-card);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
-        <h4 style="margin:0; color:var(--info); font-size:13px; font-weight:900;">🏦 Base de Datos & Cierre</h4>
-        <span style="font-size:10px; color:var(--text-muted); font-weight:700;">Copias en la nube y reportes</span>
+    <!-- Herramientas de Base de Datos & Cierre (Restaurado y Completo) -->
+    <div style="background: rgba(58,134,255,0.08); border: 2px solid var(--info); padding: 16px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(58,134,255,0.15);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <h4 style="margin:0 0 2px 0; color:var(--info); font-weight:900; font-size:14px;">🏦 Herramientas de Base de Datos & Cierre</h4>
+          <p style="margin:0; font-size:11px; color:var(--text-muted); font-weight:700;">Descarga respaldos offline de seguridad, cierre de caja y link del catálogo.</p>
+        </div>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px;">
-          <button class="btn-primary" style="background:var(--success); color:#070b14; font-weight:900; font-size:11px; padding:9px 10px;" onclick="abrirModalHistorialRespaldos()">☁️ Respaldos (7)</button>
-          <button class="btn-secondary" style="border-color:var(--accent); color:var(--accent); font-weight:800; font-size:11px; padding:9px 10px;" onclick="descargarRespaldoJSON()">💾 Descargar JSON</button>
-          <button class="btn-secondary" style="border-color:var(--warning); color:var(--warning); font-weight:800; font-size:11px; padding:9px 10px;" onclick="document.getElementById('input-restaurar-json').click()">📂 Restaurar</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-primary" style="background:var(--success); color:#070b14; font-weight:900; padding:9px 13px; font-size:11px;" onclick="abrirModalHistorialRespaldos()">☁️ Puntos de Respaldo Nube (7 Max)</button>
+          <button class="btn-secondary" style="border-color:var(--accent); color:var(--accent); font-weight:900; padding:9px 13px; font-size:11px;" onclick="descargarRespaldoJSON()">💾 Descargar Respaldo JSON</button>
+          <button class="btn-secondary" style="border-color:var(--warning); color:var(--warning); font-weight:900; padding:9px 13px; font-size:11px;" onclick="document.getElementById('input-restaurar-json').click()">📂 Restaurar Archivo JSON</button>
           <input type="file" id="input-restaurar-json" accept=".json" style="display:none;" onchange="restaurarRespaldoJSON(this)">
-          <button class="btn-secondary" style="border-color:var(--info); color:var(--info); font-weight:800; font-size:11px; padding:9px 10px;" onclick="copiarLinkCatalogo()">🔗 Link Catálogo</button>
-          <button class="btn-primary" style="background:var(--info); color:#fff; font-weight:900; font-size:11px; padding:9px 10px;" onclick="generarCierreCaja()">📊 Cierre de Hoy</button>
+          <button class="btn-secondary" style="border-color:var(--info); color:var(--info); font-weight:900; padding:9px 13px; font-size:11px;" onclick="copiarLinkCatalogo()">🔗 Link Catálogo</button>
+          <button class="btn-primary" style="background:var(--info); color:#fff; font-weight:900; padding:9px 13px; font-size:11px;" onclick="generarCierreCaja()">📊 Reporte de Hoy</button>
       </div>
-    </div></div>
+    </div>
 
     <div class="card-panel" style="border-color: var(--success); padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 8px 25px rgba(6,214,160,0.15);">
         <h4 style="margin:0 0 8px 0; color:var(--success); font-weight:900;">📱 Número para recibir Pedidos Web</h4>
@@ -2077,17 +2074,16 @@ function alternarTipoTasa(sel) { reproducirSonido('click'); tipoTasaActiva = sel
 function aplicarEstiloTasaActiva() {
   const cBCV = document.getElementById('check-tasa-bcv'), cUSDT = document.getElementById('check-tasa-usdt');
   const bBCV = document.getElementById('box-tasa-bcv'), bUSDT = document.getElementById('box-tasa-usdt');
-  const dBCV = document.getElementById('bcv-dot'), dUSDT = document.getElementById('usdt-dot');
   if (tipoTasaActiva === 'bcv') { 
-    if(cBCV) cBCV.checked=true; if(cUSDT) cUSDT.checked=false; 
-    if(bBCV) bBCV.classList.add('activa'); if(bUSDT) bUSDT.classList.remove('activa'); 
-    if(dBCV) { dBCV.innerText='● ACT'; dBCV.style.color='var(--accent)'; }
-    if(dUSDT) { dUSDT.innerText='○'; dUSDT.style.color='var(--text-muted)'; }
+    if(cBCV) cBCV.checked = true; 
+    if(cUSDT) cUSDT.checked = false; 
+    if(bBCV) bBCV.classList.add('activa'); 
+    if(bUSDT) bUSDT.classList.remove('activa'); 
   } else { 
-    if(cBCV) cBCV.checked=false; if(cUSDT) cUSDT.checked=true; 
-    if(bBCV) bBCV.classList.remove('activa'); if(bUSDT) bUSDT.classList.add('activa'); 
-    if(dBCV) { dBCV.innerText='○'; dBCV.style.color='var(--text-muted)'; }
-    if(dUSDT) { dUSDT.innerText='● ACT'; dUSDT.style.color='var(--accent)'; }
+    if(cBCV) cBCV.checked = false; 
+    if(cUSDT) cUSDT.checked = true; 
+    if(bBCV) bBCV.classList.remove('activa'); 
+    if(bUSDT) bUSDT.classList.add('activa'); 
   }
 }
 function actualizarTasaManual(tipo) {
