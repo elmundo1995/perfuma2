@@ -576,7 +576,7 @@ setTimeout(function() {
                 </div>
             </div>
         </div>
-        <h1 class="cat-title-text">PERFUMA2</h1>
+        <h1 class="cat-title-text" style="color: var(--text-main); font-size: 24px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">PERFUMA2</h1>
         <div style="display:flex; justify-content:center; align-items:center; gap:6px; flex-wrap:wrap;">
             <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:10px; font-weight:900; border-radius:20px; padding:4px 9px;">🌙 Noche</button>
             <div id="version-badge-flotante" onclick="abrirModalActualizador()" style="font-size:10px; padding:4px 9px;">🔔 oyamh95</div>
@@ -790,26 +790,33 @@ setTimeout(function() {
 
   <!-- INVENTARIO -->
   <div id="tab-inventario" class="tab-content">
-    <div class="card-panel">
-      <div class="card-header">
-        <h3 class="card-title">🧴 Inventario General & Stock</h3>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <select id="orden-stock" class="user-input" style="width: auto; padding: 8px 12px;" onchange="renderInventario()">
+    <div class="card-panel" style="padding: 14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+        <h3 class="card-title" style="margin:0; font-size:15px;">🧴 Inventario & Stock</h3>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <select id="orden-stock" class="user-input" style="width: auto; padding: 6px 10px; font-size:11px;" onchange="renderInventario()">
             <option value="mayor" selected>⬇️ Mayor stock</option>
             <option value="menor">⬆️ Menor stock</option>
             <option value="nombre">🔤 Nombre / Marca</option>
           </select>
-          <div style="background:var(--bg-input); padding:6px 12px; border-radius:10px; border:2px solid var(--border-color); display:flex; align-items:center; gap:8px;">
-            <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:900;">Margen (%):</span>
-            <input type="number" id="input-margen-global" class="user-input" style="width:55px; padding:4px 8px; text-align:center;">
-            <button class="btn-primary" onclick="aplicarMargenGlobal()" style="padding:6px 10px; font-size:10px; font-weight:900;">Aplicar</button>
+          <div style="background:var(--bg-input); padding:4px 8px; border-radius:8px; border:1.5px solid var(--border-color); display:flex; align-items:center; gap:6px;">
+            <span style="font-size:9px; color:var(--text-muted); font-weight:900;">Margen(%):</span>
+            <input type="number" id="input-margen-global" class="user-input" style="width:45px; padding:3px 6px; text-align:center; font-size:11px;">
+            <button class="btn-primary" onclick="aplicarMargenGlobal()" style="padding:4px 8px; font-size:9px; font-weight:900;">Aplicar</button>
           </div>
-          <input type="text" id="buscar-inv" class="user-input" placeholder="Buscar perfume..." style="width:170px;" oninput="renderInventario()">
-          
-          <button class="btn-primary" onclick="unificarStockDuplicado()" style="background:var(--purple); font-weight:900;">🧹 Unificar Stock</button>
-          <button class="btn-danger" onclick="resetearStockCero()">0️⃣ Stock 0</button>
-          <button class="btn-primary" onclick="abrirModalSync()" style="background:var(--info); font-weight:900;">☁️ Importar Excel</button>
-          <button class="btn-primary" onclick="abrirModalPerfume()" style="font-weight:900;">+ Nuevo</button>
+        </div>
+      </div>
+      
+      <!-- Fila de Buscador y Acciones Compactas -->
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+        <div style="flex:1; min-width:160px;">
+          <input type="text" id="buscar-inv" class="user-input" placeholder="🔍 Buscar perfume..." style="padding:8px 12px; font-size:12px;" oninput="renderInventario()">
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-primary" onclick="unificarStockDuplicado()" style="background:var(--purple); font-weight:900; font-size:10px; padding:7px 10px;">🧹 Unificar</button>
+          <button class="btn-danger" onclick="resetearStockCero()" style="font-size:10px; padding:7px 10px;">0️⃣ Stock 0</button>
+          <button class="btn-primary" onclick="abrirModalSync()" style="background:var(--info); font-weight:900; font-size:10px; padding:7px 10px;">☁️ Excel</button>
+          <button class="btn-primary" onclick="abrirModalPerfume()" style="font-weight:900; font-size:10px; padding:7px 12px;">+ Nuevo</button>
         </div>
       </div>
       <div class="table-responsive">
@@ -2369,12 +2376,17 @@ function destaparDesdeDecantsTab() {
 }
 
 function toggleDeliveryPanel(tipo) {
-    const chk = document.getElementById(tipo === 'detal' ? 'v-usa-delivery' : 'm-usa-delivery');
-    const panel = document.getElementById(tipo === 'detal' ? 'v-delivery-panel' : 'm-delivery-panel');
+    let idChk = 'v-usa-delivery', idPanel = 'v-delivery-panel';
+    if (tipo === 'mayor') { idChk = 'm-usa-delivery'; idPanel = 'm-delivery-panel'; }
+    else if (tipo === 'decant') { idChk = 'dec-usa-delivery'; idPanel = 'dec-delivery-panel'; }
+
+    const chk = document.getElementById(idChk);
+    const panel = document.getElementById(idPanel);
     if (chk && panel) {
         panel.style.display = chk.checked ? 'grid' : 'none';
     }
-    recalcularTotalesVenta(tipo === 'detal' ? 'detal' : 'mayor');
+    if (tipo === 'decant') { recalcularTotalesVentaDecant(); }
+    else { recalcularTotalesVenta(tipo); }
 }
 
 function renderInventario() {
@@ -3155,9 +3167,15 @@ function renderCatalogoPublico() {
                 <div class="cat-item-name">${p.nombre}</div>
                 <div class="cat-item-format">${formatoTxt}</div>
             </div>
-            <div>
-                <div class="cat-item-price">${precioTxt}</div>
-                <div class="cat-item-bs">Bs. ${(Number(p.precio) * tasa).toFixed(2)}</div>
+            <div style="margin-top: 8px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 2px;">
+                    <span style="font-size:10px; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Precio:</span>
+                    <span class="cat-item-price" style="font-size:18px; font-weight:900; color:var(--accent); text-shadow: 0 0 10px rgba(0,242,214,0.3);">${precioTxt}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 10px;">
+                    <span style="font-size:10px; color:var(--text-muted); font-weight:800;">Al cambio:</span>
+                    <span class="cat-item-bs" style="font-size:12px; font-weight:800; color:var(--warning);">Bs. ${(Number(p.precio) * tasa).toFixed(2)}</span>
+                </div>
                 <button class="cat-item-btn" onclick="agregarAlCarritoPublico('${p.id}', ${Number(p.precio)}, ${esDec}, this)">Añadir</button>
             </div>
         </div>`;
