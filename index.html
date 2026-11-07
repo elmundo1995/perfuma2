@@ -634,33 +634,38 @@ setTimeout(function() {
       </div>
     </div>
     
-    <div class="header-controls">
-      <!-- Fila 1: Accesos rápidos esenciales -->
-      <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:11px; font-weight:900; border-radius:20px; padding:6px 12px;" title="Cambiar tema">🌙 Modo Noche</button>
-      <div id="version-badge-flotante" onclick="abrirModalActualizador()" title="Configuración y Actualizador">🔔 oyamh95</div>
-      <div id="reloj-sistema" style="font-size: 11px; color: var(--accent); font-weight: 800; background: rgba(0,242,214,0.08); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(0,242,214,0.25);"></div>
-      
-      <!-- Fila 2: Tasa BCV y Sincronización Nube -->
-      <div class="tasa-box activa" id="box-tasa-bcv" onclick="alternarTipoTasa('bcv')">
-        <input type="checkbox" id="check-tasa-bcv" checked style="accent-color:var(--accent); pointer-events:none;">
-        <div title="Tasa Oficial BCV">
-          <span class="tasa-label">Tasa BCV (Bs)</span>
-          <input type="number" step="0.01" id="tasaBCVInput" class="tasa-input" onchange="actualizarTasaManual('bcv')" onclick="event.stopPropagation()">
-        </div>
+        <div class="header-controls">
+      <!-- Barra Superior Rápida -->
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; width:100%; margin-bottom:4px;">
+        <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:11px; font-weight:900; border-radius:20px; padding:5px 10px;" title="Cambiar tema">🌙 Noche</button>
+        <div id="version-badge-flotante" onclick="abrirModalActualizador()" title="Configuración y Actualizador" style="padding:5px 10px; font-size:11px;">🔔 oyamh95</div>
+        <div id="reloj-sistema" style="font-size:11px; font-weight:800; background:rgba(0,242,214,0.08); padding:5px 10px; border-radius:20px; border:1px solid rgba(0,242,214,0.25);"></div>
+        <div id="cloud-status" style="font-size:10px; font-weight:800; color:var(--success); margin-left:auto;">● En Línea</div>
       </div>
       
-      <button class="btn-primary" onclick="obtenerTasasAutomaticas()" style="background:var(--info); font-size:11px; padding:7px 11px;" title="Actualizar Tasa BCV Ahora">🔄 Actualizar</button>
-      <button id="btn-sync-manual" class="btn-primary" onclick="guardarCambiosEnNube(true)" style="font-size:11px; padding:7px 12px;">☁️ Guardar</button>
+      <!-- Tasas y Acciones Directas -->
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; width:100%;">
+        <!-- Caja BCV -->
+        <div class="tasa-box activa" id="box-tasa-bcv" onclick="alternarTipoTasa('bcv')" style="padding:4px 8px; flex:1; min-width:115px;">
+          <input type="checkbox" id="check-tasa-bcv" checked style="accent-color:var(--accent); pointer-events:none;">
+          <div title="Tasa Oficial BCV">
+            <span class="tasa-label" style="font-size:8px;">BCV (Bs)</span>
+            <input type="number" step="0.01" id="tasaBCVInput" class="tasa-input" style="font-size:13px; width:65px;" onchange="actualizarTasaManual('bcv')" onclick="event.stopPropagation()">
+          </div>
+        </div>
 
-      <!-- Controles complementarios compactos -->
-      <div class="tasa-box" id="box-tasa-usdt" onclick="alternarTipoTasa('usdt')" style="display:none;">
-        <input type="checkbox" id="check-tasa-usdt" style="accent-color:var(--accent); pointer-events:none;">
-        <div>
-          <span class="tasa-label">USDT</span>
-          <input type="number" step="0.01" id="tasaUSDTInput" class="tasa-input" onchange="actualizarTasaManual('usdt')" onclick="event.stopPropagation()">
+        <!-- Caja USDT Integrada -->
+        <div class="tasa-box" id="box-tasa-usdt" onclick="alternarTipoTasa('usdt')" style="padding:4px 8px; flex:1; min-width:115px;">
+          <input type="checkbox" id="check-tasa-usdt" style="accent-color:var(--accent); pointer-events:none;">
+          <div title="Tasa USDT Manual">
+            <span class="tasa-label" style="font-size:8px;">USDT (Bs)</span>
+            <input type="number" step="0.01" id="tasaUSDTInput" class="tasa-input" style="font-size:13px; width:65px;" onchange="actualizarTasaManual('usdt')" onclick="event.stopPropagation()">
+          </div>
         </div>
+
+        <button class="btn-primary" onclick="obtenerTasasAutomaticas(true)" style="background:var(--info); font-size:11px; padding:8px 10px;" title="Actualizar Tasa BCV Ahora">🔄 Tasa</button>
+        <button id="btn-sync-manual" class="btn-primary" onclick="guardarCambiosEnNube(true)" style="font-size:11px; padding:8px 12px;">☁️ Guardar</button>
       </div>
-      <div id="cloud-status" style="font-size:10px; font-weight:800; color:var(--success); display:inline-flex; align-items:center;">● En Línea</div>
     </div>
   </div>
 
@@ -679,21 +684,20 @@ setTimeout(function() {
 
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="tab-content active">
-    <div style="background: rgba(58,134,255,0.1); border: 2px solid var(--info); padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 4px 20px rgba(58,134,255,0.2);">
-      <div>
-        <h4 style="margin:0 0 4px 0; color:var(--info); font-weight:900;">🏦 Herramientas de Base de Datos & Cierre</h4>
-        <p style="margin:0; font-size:12px; color:var(--text-muted); font-weight:700;">Descarga respaldos offline de seguridad, cierre de caja y link del catálogo.</p>
+    <div class="card-panel" style="padding:14px; margin-bottom:18px; border:1.5px solid var(--border-color); background:var(--bg-card);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
+        <h4 style="margin:0; color:var(--info); font-size:13px; font-weight:900;">🏦 Base de Datos & Cierre</h4>
+        <span style="font-size:10px; color:var(--text-muted); font-weight:700;">Copias en la nube y reportes</span>
       </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn-primary" style="background:var(--success); color:#070b14; font-weight:900;" onclick="abrirModalHistorialRespaldos()">☁️ Puntos de Respaldo Nube (7 Max)</button>
-          <button class="btn-secondary" style="border-color:var(--accent); color:var(--accent); font-weight:900;" onclick="descargarRespaldoJSON()">💾 Descargar Respaldo JSON</button>
-          <button class="btn-secondary" style="border-color:var(--warning); color:var(--warning); font-weight:900;" onclick="document.getElementById('input-restaurar-json').click()">📂 Restaurar Archivo JSON</button>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px;">
+          <button class="btn-primary" style="background:var(--success); color:#070b14; font-weight:900; font-size:11px; padding:9px 10px;" onclick="abrirModalHistorialRespaldos()">☁️ Respaldos (7)</button>
+          <button class="btn-secondary" style="border-color:var(--accent); color:var(--accent); font-weight:800; font-size:11px; padding:9px 10px;" onclick="descargarRespaldoJSON()">💾 Descargar JSON</button>
+          <button class="btn-secondary" style="border-color:var(--warning); color:var(--warning); font-weight:800; font-size:11px; padding:9px 10px;" onclick="document.getElementById('input-restaurar-json').click()">📂 Restaurar</button>
           <input type="file" id="input-restaurar-json" accept=".json" style="display:none;" onchange="restaurarRespaldoJSON(this)">
-          
-          <button class="btn-secondary" style="border-color:var(--info); color:var(--info); font-weight:900;" onclick="copiarLinkCatalogo()">🔗 Link Catálogo</button>
-          <button class="btn-primary" style="background:var(--info); color:#fff; font-weight:900;" onclick="generarCierreCaja()">Reporte de Hoy</button>
+          <button class="btn-secondary" style="border-color:var(--info); color:var(--info); font-weight:800; font-size:11px; padding:9px 10px;" onclick="copiarLinkCatalogo()">🔗 Link Catálogo</button>
+          <button class="btn-primary" style="background:var(--info); color:#fff; font-weight:900; font-size:11px; padding:9px 10px;" onclick="generarCierreCaja()">📊 Cierre de Hoy</button>
       </div>
-    </div>
+    </div></div>
 
     <div class="card-panel" style="border-color: var(--success); padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 8px 25px rgba(6,214,160,0.15);">
         <h4 style="margin:0 0 8px 0; color:var(--success); font-weight:900;">📱 Número para recibir Pedidos Web</h4>
@@ -1847,23 +1851,32 @@ const isCatalogoPublico = urlParams.get('catalogo') === 'true';
 
 function obtenerTasaActiva() { return tipoTasaActiva === 'usdt' ? (tasaUSDT||1) : (tasaBCV||1); }
 
-async function obtenerTasasAutomaticas() {
+async function obtenerTasasAutomaticas(mostrarAlerta = false) {
   if (isCatalogoPublico) return;
   try {
     const resBCV = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
     const dataBCV = await resBCV.json();
     if (dataBCV && dataBCV.promedio) {
       tasaBCV = parseFloat(dataBCV.promedio.toFixed(2));
-      document.getElementById('tasaBCVInput').value = tasaBCV;
-      reproducirSonido('exito');
-      alert(`✅ Tasa BCV actualizada correctamente: Bs. ${tasaBCV}`);
+      const inp = document.getElementById('tasaBCVInput');
+      if (inp) inp.value = tasaBCV;
+      localStorage.setItem('p2_last_tasa_sync', Date.now().toString());
+      if (mostrarAlerta) {
+        reproducirSonido('exito');
+        alert(`✅ Tasa BCV actualizada: Bs. ${tasaBCV}`);
+      }
     }
     guardarCambiosEnNube(false); 
     renderTodo(); 
   } catch (err) {
-    alert("⚠️ No se pudo conectar con la API BCV. Verifique su internet o ingrésela manualmente.");
+    if (mostrarAlerta) alert("⚠️ No se pudo conectar con la API BCV.");
   }
 }
+
+// Actualización automática de Tasa BCV 5 veces al día (cada 2.5 horas / 150 minutos)
+setInterval(() => {
+  obtenerTasasAutomaticas(false);
+}, 150 * 60 * 1000);
 
 // Cargar y ejecutar código dinámico si existe en Firebase
 db.ref('perfuma2_version_control').on('value', (snapshot) => {
@@ -3976,13 +3989,13 @@ function aplicarTemaVisual(tema) {
     const btns = document.querySelectorAll('.btn-theme-toggle');
     btns.forEach(btn => {
         if (tema === 'light') {
-            btn.innerHTML = '☀️ Modo Día';
+            btn.innerHTML = '☀️ Día';
             btn.title = 'Cambiar a Modo Noche (Luna)';
             btn.style.borderColor = '#0d9488';
             btn.style.color = '#0d9488';
             btn.style.background = '#ffffff';
         } else {
-            btn.innerHTML = '🌙 Modo Noche';
+            btn.innerHTML = '🌙 Noche';
             btn.title = 'Cambiar a Modo Día (Sol)';
             btn.style.borderColor = '#00f2d6';
             btn.style.color = '#00f2d6';
