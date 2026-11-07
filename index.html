@@ -111,6 +111,23 @@
     color: #0f172a !important;
   }
 
+  
+  [data-theme="light"] .tasa-input {
+    color: #0f172a !important;
+    font-weight: 900 !important;
+  }
+  [data-theme="light"] .caja-checkout-total {
+    background: #f0fdfa !important;
+    border-color: #99f6e4 !important;
+  }
+  [data-theme="light"] .caja-checkout-total span#cat-checkout-bs {
+    color: #b45309 !important;
+  }
+  [data-theme="light"] .bloque-motorizado-check {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+  }
+
   body { margin: 0; padding: 16px; background: var(--bg-main); color: var(--text-main); font-size: 13px; }
   
   #version-badge-flotante {
@@ -172,7 +189,7 @@
   .tasa-box { background: var(--bg-card); border: 2px solid var(--border-color); padding: 6px 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
   .tasa-box.activa { border-color: var(--accent); background: rgba(0,242,214,0.1); box-shadow: 0 0 20px rgba(0,242,214,0.3), inset 0 0 8px rgba(0,242,214,0.2); }
   .tasa-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; display: block; }
-  .tasa-input { background: transparent; border: none; color: #fff; font-weight: 900; font-size: 15px; width: 75px; outline: none; cursor: text; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+  .tasa-input { background: transparent; border: none; color: var(--text-main); font-weight: 900; font-size: 15px; width: 78px; outline: none; cursor: text; }
   
   button { cursor: pointer; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 800; font-size: 12px; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
   button:active { transform: scale(0.96); }
@@ -209,7 +226,7 @@
   .user-input { width: 100%; background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-main); padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; outline: none; transition: all 0.25s; box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); }
   .user-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0,242,214,0.3), inset 0 2px 5px rgba(0,0,0,0.3); }
   
-  .table-responsive { overflow-x: auto; max-height: 550px; overflow-y: auto; border-radius: 10px; border: 2px solid var(--border-color); box-shadow: inset 0 4px 10px rgba(0,0,0,0.4); }
+  .table-responsive { overflow-x: auto; max-height: 560px; overflow-y: auto; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-card); box-shadow: none; }
   table { width: 100%; border-collapse: collapse; text-align: left; }
   .caja-totales {
     background: var(--bg-card);
@@ -589,9 +606,9 @@ setTimeout(function() {
     
     <div id="cat-carrito-items" style="flex:1; overflow-y:auto; margin-bottom:16px;"></div>
     
-    <div style="background:rgba(0,0,0,0.4); padding:18px; border-radius:14px; margin-bottom:18px; border:2px solid var(--border-color);">
-      <div style="display:flex; justify-content:space-between; font-weight:900; font-size:22px; color:#fff;"><span>Total:</span> <span id="cat-checkout-total" style="color:var(--accent); text-shadow:0 0 10px rgba(0,242,214,0.5);">$0.00</span></div>
-      <div style="display:flex; justify-content:space-between; font-weight:800; font-size:13px; color:var(--warning); margin-top:6px;"><span>En Bolívares:</span> <span id="cat-checkout-bs">Bs. 0.00</span></div>
+    <div class="caja-checkout-total" style="padding:16px 18px; border-radius:14px; margin-bottom:18px; border:2px solid var(--border-color); background:var(--bg-input);">
+      <div style="display:flex; justify-content:space-between; align-items:center; font-weight:900; font-size:20px; color:var(--text-main);"><span>Total Pedido:</span> <span id="cat-checkout-total" style="color:var(--accent);">$0.00</span></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:13px; color:var(--warning); margin-top:6px;"><span>En Bolívares:</span> <span id="cat-checkout-bs">Bs. 0.00</span></div>
     </div>
     
     <div class="form-group" style="margin-bottom:12px;"><label>Tu Nombre y Apellido</label><input type="text" id="cat-cli-nombre" class="user-input" placeholder="Ej: Maria Perez"></div>
@@ -618,12 +635,12 @@ setTimeout(function() {
     </div>
     
     <div class="header-controls">
+      <!-- Fila 1: Accesos rápidos esenciales -->
+      <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:11px; font-weight:900; border-radius:20px; padding:6px 12px;" title="Cambiar tema">🌙 Modo Noche</button>
       <div id="version-badge-flotante" onclick="abrirModalActualizador()" title="Configuración y Actualizador">🔔 oyamh95</div>
-      <div id="reloj-sistema" style="font-size: 13px; color: var(--accent); font-weight: 900; margin-right: 10px; background: rgba(0,242,214,0.1); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,242,214,0.3); text-shadow: 0 0 8px rgba(0,242,214,0.4);"></div>
+      <div id="reloj-sistema" style="font-size: 11px; color: var(--accent); font-weight: 800; background: rgba(0,242,214,0.08); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(0,242,214,0.25);"></div>
       
-      <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:12px; font-weight:900; border-radius:20px; padding:7px 14px;" title="Cambiar tema">🌙 Modo Noche</button>
-      <button class="btn-primary" onclick="solicitarPermisoNotificaciones()" style="background:var(--purple); color:#fff; font-size:11px;" title="Activa notificaciones push">🔔 Activar Alertas Push</button>
-      
+      <!-- Fila 2: Tasa BCV y Sincronización Nube -->
       <div class="tasa-box activa" id="box-tasa-bcv" onclick="alternarTipoTasa('bcv')">
         <input type="checkbox" id="check-tasa-bcv" checked style="accent-color:var(--accent); pointer-events:none;">
         <div title="Tasa Oficial BCV">
@@ -632,19 +649,18 @@ setTimeout(function() {
         </div>
       </div>
       
-      <button class="btn-primary" onclick="obtenerTasasAutomaticas()" style="background:var(--info); font-size:11px; padding:8px 12px;" title="Actualizar Tasa BCV Ahora">🔄 Actualizar Tasa</button>
-      
-      <div class="tasa-box" id="box-tasa-usdt" onclick="alternarTipoTasa('usdt')">
+      <button class="btn-primary" onclick="obtenerTasasAutomaticas()" style="background:var(--info); font-size:11px; padding:7px 11px;" title="Actualizar Tasa BCV Ahora">🔄 Actualizar</button>
+      <button id="btn-sync-manual" class="btn-primary" onclick="guardarCambiosEnNube(true)" style="font-size:11px; padding:7px 12px;">☁️ Guardar</button>
+
+      <!-- Controles complementarios compactos -->
+      <div class="tasa-box" id="box-tasa-usdt" onclick="alternarTipoTasa('usdt')" style="display:none;">
         <input type="checkbox" id="check-tasa-usdt" style="accent-color:var(--accent); pointer-events:none;">
-        <div title="Tasa USDT Manual">
-          <span class="tasa-label">Tasa USDT (Manual)</span>
+        <div>
+          <span class="tasa-label">USDT</span>
           <input type="number" step="0.01" id="tasaUSDTInput" class="tasa-input" onchange="actualizarTasaManual('usdt')" onclick="event.stopPropagation()">
         </div>
       </div>
-      
-      <div id="cloud-status" style="font-size:11px; font-weight:900; color:var(--success); margin-right:5px; text-shadow:0 0 8px rgba(6,214,160,0.5);">● Sincronizado</div>
-      <button class="btn-secondary" onclick="window.location.reload(true)">🔄 Recargar</button>
-      <button id="btn-sync-manual" class="btn-primary" onclick="guardarCambiosEnNube(true)">☁️ Guardar Nube</button>
+      <div id="cloud-status" style="font-size:10px; font-weight:800; color:var(--success); display:inline-flex; align-items:center;">● En Línea</div>
     </div>
   </div>
 
@@ -814,8 +830,8 @@ setTimeout(function() {
         <div class="form-group"><label>Dirección / Zona</label><input type="text" id="v-direccion" class="user-input" placeholder="Ej: Urb. El Centro"></div>
       </div>
       
-      <div class="form-group" style="grid-column: 1 / -1; margin-bottom:12px;">
-        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--info); font-size:14px; font-weight:800;">
+      <div class="bloque-motorizado-check" style="margin: 16px 0; padding: 12px 14px; border-radius: 12px; border: 1.5px dashed var(--info); background: rgba(58,134,255,0.06);">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--info); font-size:13px; font-weight:800; margin:0;">
           <input type="checkbox" id="v-usa-delivery" onchange="toggleDeliveryPanel('detal')" style="width:18px; height:18px; accent-color:var(--info);">
           🛵 ¿Enviar pedido con un Motorizado?
         </label>
@@ -827,10 +843,10 @@ setTimeout(function() {
       </div>
 
       <div style="background:var(--bg-input); padding:14px; border-radius:12px; border:2px solid var(--border-color); margin-bottom:16px;">
-        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-          <div style="flex:3; min-width:220px;"><input type="text" id="v-producto-input" class="user-input" list="lista-productos-stock" placeholder="Buscar perfume en stock (Sellados)..."></div>
-          <div style="flex:1; min-width:80px;"><input type="number" id="v-cantidad-item" class="user-input" value="1" min="1"></div>
-          <button class="btn-primary" type="button" onclick="agregarItemAlCarrito('detal')" style="padding:11px 16px; height:42px; font-weight:900;">+ Añadir Perfume</button>
+        <div class="caja-agregar-item-grid" style="display:grid; grid-template-columns: 1fr auto auto; gap:10px; align-items:center;">
+          <div><input type="text" id="v-producto-input" class="user-input" list="lista-productos-stock" placeholder="Buscar perfume en stock (Sellados)..."></div>
+          <div style="width:75px;"><input type="number" id="v-cantidad-item" class="user-input" value="1" min="1" style="text-align:center;"></div>
+          <div><button class="btn-primary" type="button" onclick="agregarItemAlCarrito('detal')" style="padding:10px 16px; height:42px; font-weight:900; white-space:nowrap;">+ Añadir</button></div>
         </div>
       </div>
       <div class="carrito-caja" id="v-items-carrito-lista"><div style="color:var(--text-muted); font-style:italic;">Carrito vacío.</div></div>
@@ -921,8 +937,8 @@ setTimeout(function() {
         <div class="form-group"><label>Dirección / Encomienda</label><input type="text" id="m-direccion" class="user-input" placeholder="Ej: MRW Centro"></div>
       </div>
       
-      <div class="form-group" style="grid-column: 1 / -1; margin-bottom:12px;">
-        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--warning); font-size:14px; font-weight:800;">
+      <div class="bloque-motorizado-check" style="margin: 16px 0; padding: 12px 14px; border-radius: 12px; border: 1.5px dashed var(--warning); background: rgba(245,158,11,0.06);">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--warning); font-size:13px; font-weight:800; margin:0;">
           <input type="checkbox" id="m-usa-delivery" onchange="toggleDeliveryPanel('mayor')" style="width:18px; height:18px; accent-color:var(--warning);">
           🛵 ¿Enviar pedido con un Motorizado?
         </label>
@@ -934,10 +950,10 @@ setTimeout(function() {
       </div>
 
       <div style="background:var(--bg-input); padding:14px; border-radius:12px; border:2px solid var(--warning); margin-bottom:16px;">
-        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-          <div style="flex:3; min-width:220px;"><input type="text" id="m-producto-input" class="user-input" list="lista-productos-stock" placeholder="Buscar perfume en stock..."></div>
-          <div style="flex:1; min-width:80px;"><input type="number" id="m-cantidad-item" class="user-input" value="6" min="1"></div>
-          <button class="btn-warning" type="button" onclick="agregarItemAlCarrito('mayor')" style="padding:11px 16px; height:42px; font-weight:900;">+ Añadir Mayor</button>
+        <div class="caja-agregar-item-grid" style="display:grid; grid-template-columns: 1fr auto auto; gap:10px; align-items:center;">
+          <div><input type="text" id="m-producto-input" class="user-input" list="lista-productos-stock" placeholder="Buscar perfume en stock..."></div>
+          <div style="width:75px;"><input type="number" id="m-cantidad-item" class="user-input" value="6" min="1" style="text-align:center;"></div>
+          <div><button class="btn-warning" type="button" onclick="agregarItemAlCarrito('mayor')" style="padding:10px 16px; height:42px; font-weight:900; white-space:nowrap;">+ Añadir</button></div>
         </div>
       </div>
       <div class="carrito-caja" id="m-items-carrito-lista"><div style="color:var(--text-muted); font-style:italic;">Carrito mayorista vacío.</div></div>
@@ -949,7 +965,7 @@ setTimeout(function() {
         </div>
       </div>
       <div style="display:flex; gap:12px;">
-        <button class="btn-secondary" onclick="generarCotizacionMayor()" style="flex:1; padding:14px; font-size:15px; color:#fff; border-color:var(--warning); font-weight:900;">📲 Cotización</button>
+        <button class="btn-secondary" onclick="generarCotizacionMayor()" style="flex:1; padding:14px; font-size:14px; color:var(--warning); border-color:var(--warning); font-weight:900; background:var(--bg-card);">📲 Cotización</button>
         <button class="btn-warning" onclick="registrarVenta('mayor')" style="flex:1.5; padding:14px; font-size:15px; font-weight:900;">💾 Registrar Venta</button>
       </div>
     </div>
@@ -1037,8 +1053,8 @@ setTimeout(function() {
         <div class="form-group"><label>Dirección / Zona</label><input type="text" id="dec-direccion" class="user-input" placeholder="Opcional"></div>
       </div>
       
-      <div class="form-group" style="grid-column: 1 / -1; margin-bottom:12px;">
-        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--warning); font-size:14px; font-weight:800;">
+      <div class="bloque-motorizado-check" style="margin: 16px 0; padding: 12px 14px; border-radius: 12px; border: 1.5px dashed var(--warning); background: rgba(245,158,11,0.06);">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--warning); font-size:13px; font-weight:800; margin:0;">
           <input type="checkbox" id="dec-usa-delivery" onchange="toggleDeliveryPanel('decant')" style="width:18px; height:18px; accent-color:var(--warning);">
           🛵 ¿Enviar pedido con un Motorizado?
         </label>
