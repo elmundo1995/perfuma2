@@ -40,105 +40,97 @@
     --card-shadow: 0 8px 30px rgba(0,0,0,0.5);
   }
 
+  /* REGLAS PROFESIONALES DE CONTRASTE Y LIMPIEZA PARA MODO DÍA */
   [data-theme="light"] {
-    --bg-main: #f4fbfb; 
+    --bg-main: #f8fafc; 
     --bg-card: #ffffff; 
-    --bg-input: #f0fafa; 
-    --border-color: #cceeee; 
-    --accent: #0d9488; 
-    --accent-hover: #14b8a6; 
-    --text-main: #0f2329; 
-    --text-muted: #527982; 
-    --danger: #ef4444; 
-    --warning: #f59e0b; 
-    --success: #0d9488; 
+    --bg-input: #f1f5f9; 
+    --border-color: #cbd5e1; 
+    --accent: #0f766e; 
+    --accent-hover: #115e59; 
+    --text-main: #0f172a; 
+    --text-muted: #64748b; 
+    --danger: #dc2626; 
+    --warning: #d97706; 
+    --success: #059669; 
     --info: #0284c7; 
-    --purple: #8b5cf6; 
-    --card-shadow: 0 10px 30px rgba(13,148,136,0.08), 0 2px 8px rgba(0,0,0,0.04);
+    --purple: #7c3aed; 
+    --card-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
   }
 
-  /* Ajustes visuales para modo claro */
-  [data-theme="light"] th {
-    background: #e6f7f7 !important;
-    color: #0d9488 !important;
-    border-bottom: 2px solid #cceeee !important;
+  [data-theme="light"] .user-input {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04) !important;
   }
-  [data-theme="light"] .cat-hero {
-    background: radial-gradient(circle, #e6f7f7 0%, #f4fbfb 100%) !important;
-  }
-  [data-theme="light"] .cat-title-text {
-    color: #0f2329 !important;
-    text-shadow: none !important;
-  }
-  [data-theme="light"] .cat-item {
+  [data-theme="light"] .user-input:focus {
+    border-color: #0f766e !important;
     background: #ffffff !important;
-    border-color: #cceeee !important;
-    box-shadow: 0 8px 24px rgba(13,148,136,0.08) !important;
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.15) !important;
   }
-  [data-theme="light"] .cat-item-name {
-    color: #0f2329 !important;
-    text-shadow: none !important;
+  [data-theme="light"] .user-input::placeholder {
+    color: #94a3b8 !important;
   }
-  [data-theme="light"] .cat-item-price {
-    color: #0f2329 !important;
-    text-shadow: none !important;
+  [data-theme="light"] select.user-input {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
   }
-  [data-theme="light"] .cat-cart-bar {
-    background: rgba(255,255,255,0.96) !important;
-    border-top: 2px solid #0d9488 !important;
-    box-shadow: 0 -8px 30px rgba(13,148,136,0.12) !important;
+  [data-theme="light"] select.user-input option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
   }
-  [data-theme="light"] .cat-cart-total {
-    color: #0f2329 !important;
-    text-shadow: none !important;
-  }
-  [data-theme="light"] .carrito-caja {
-    background: #f0fafa !important;
-    border-color: #cceeee !important;
-  }
-  [data-theme="light"] #reloj-sistema {
-    background: rgba(13,148,136,0.1) !important;
-    border-color: rgba(13,148,136,0.3) !important;
-    color: #0d9488 !important;
-    text-shadow: none !important;
-  }
-  [data-theme="light"] .tasa-box {
+
+  [data-theme="light"] .card-panel {
     background: #ffffff !important;
-    border-color: #cceeee !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
   }
-  [data-theme="light"] .tasa-input {
-    color: #0f2329 !important;
-    text-shadow: none !important;
+  [data-theme="light"] .card-title {
+    color: #0f172a !important;
   }
-  [data-theme="light"] .logo-3d-circle {
-    background: radial-gradient(circle at 30% 30%, #ffffff, #e6f7f7 85%) !important;
-    box-shadow: 0 8px 20px rgba(13,148,136,0.2) !important;
-  }
-  [data-theme="light"] .tab-btn {
+  [data-theme="light"] .kpi-card {
     background: #ffffff !important;
-    border-color: #cceeee !important;
-    color: #527982 !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
   }
-  [data-theme="light"] .tab-btn.active {
-    background: rgba(13,148,136,0.12) !important;
-    border-color: #0d9488 !important;
-    color: #0d9488 !important;
+  [data-theme="light"] .kpi-title {
+    color: #64748b !important;
+  }
+  [data-theme="light"] td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  [data-theme="light"] tr:hover td {
+    background: rgba(15,118,110,0.04) !important;
+  }
+  [data-theme="light"] .modal-box {
+    background: #ffffff !important;
+    border-color: #0f766e !important;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.15) !important;
+    color: #0f172a !important;
   }
 
   body { margin: 0; padding: 16px; background: var(--bg-main); color: var(--text-main); font-size: 13px; }
   
   #version-badge-flotante {
-      position: fixed; top: 14px; right: 14px; background: rgba(0, 242, 214, 0.12);
+      background: rgba(0, 242, 214, 0.1);
       border: 1.5px solid var(--accent); color: var(--accent); padding: 6px 14px;
-      border-radius: 30px; font-size: 11px; font-weight: 900; z-index: 999999;
-      cursor: pointer; pointer-events: auto; backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0, 242, 214, 0.35), inset 0 0 8px rgba(0, 242, 214, 0.15);
-      animation: neonGlow 2s infinite alternate;
-      letter-spacing: 0.5px;
+      border-radius: 30px; font-size: 11px; font-weight: 900;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+      box-shadow: 0 2px 10px rgba(0, 242, 214, 0.2);
+      transition: all 0.25s ease;
+      white-space: nowrap;
   }
-  @keyframes neonGlow {
-      0% { box-shadow: 0 0 10px rgba(0, 242, 214, 0.3); }
-      100% { box-shadow: 0 0 25px rgba(0, 242, 214, 0.8), inset 0 0 12px rgba(0, 242, 214, 0.4); }
+  #version-badge-flotante:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(0, 242, 214, 0.35);
+  }
+  [data-theme="light"] #version-badge-flotante {
+      background: #ffffff !important;
+      border-color: #0f766e !important;
+      color: #0f766e !important;
+      box-shadow: 0 2px 8px rgba(15,118,110,0.15) !important;
   }
 
   #loader-pantalla {
@@ -214,7 +206,7 @@
   
   .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px; }
   .form-group label { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 900; margin-bottom: 6px; letter-spacing: 0.5px; }
-  .user-input { width: 100%; background: var(--bg-input); border: 2px solid var(--border-color); color: #fff; padding: 11px 14px; border-radius: 10px; font-size: 14px; outline: none; transition: all 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); }
+  .user-input { width: 100%; background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-main); padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; outline: none; transition: all 0.25s; box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); }
   .user-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0,242,214,0.3), inset 0 2px 5px rgba(0,0,0,0.3); }
   
   .table-responsive { overflow-x: auto; max-height: 550px; overflow-y: auto; border-radius: 10px; border: 2px solid var(--border-color); box-shadow: inset 0 4px 10px rgba(0,0,0,0.4); }
@@ -384,7 +376,7 @@
 </head>
 <body>
 
-<div id="version-badge-flotante" onclick="abrirModalActualizador()" style="cursor: pointer; pointer-events: auto;" title="Configuración y Actualizador">🔔 oyamh95</div>
+
 
 <div id="loader-pantalla">
     <div class="logo-3d-wrapper">
@@ -436,6 +428,9 @@ setTimeout(function() {
             </div>
         </div>
         <h1 class="cat-title-text">PERFUMA2</h1>
+        <div style="display:flex; justify-content:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <div id="version-badge-flotante" onclick="abrirModalActualizador()" style="font-size:10px; padding:4px 10px;">🔔 oyamh95</div>
+        </div>
         <div id="cat-tasa-display" class="cat-tasa-badge">Cargando Tasa...</div>
         <div style="margin-top:10px;"><button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:11px; font-weight:900; border-radius:20px; padding:6px 14px;">🌙 Modo Noche</button></div>
     </div>
@@ -498,6 +493,7 @@ setTimeout(function() {
     </div>
     
     <div class="header-controls">
+      <div id="version-badge-flotante" onclick="abrirModalActualizador()" title="Configuración y Actualizador">🔔 oyamh95</div>
       <div id="reloj-sistema" style="font-size: 13px; color: var(--accent); font-weight: 900; margin-right: 10px; background: rgba(0,242,214,0.1); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,242,214,0.3); text-shadow: 0 0 8px rgba(0,242,214,0.4);"></div>
       
       <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:12px; font-weight:900; border-radius:20px; padding:7px 14px;" title="Cambiar tema">🌙 Modo Noche</button>
@@ -570,7 +566,7 @@ setTimeout(function() {
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-title">Ventas Totales</div>
-        <div class="kpi-value" id="kpi-ventas" style="color:#fff;">$0.00</div>
+        <div class="kpi-value" id="kpi-ventas" style="color:var(--text-main);">$0.00</div>
         <div class="kpi-sub" id="kpi-ventas-bs">Bs. 0.00</div>
       </div>
       <div class="kpi-card" style="border-left: 4px solid var(--accent);">
@@ -590,7 +586,7 @@ setTimeout(function() {
       </div>
       <div class="kpi-card">
         <div class="kpi-title">Stock Físico (Unidades)</div>
-        <div class="kpi-value" id="kpi-stock" style="color:#fff;">0</div>
+        <div class="kpi-value" id="kpi-stock" style="color:var(--text-main);">0</div>
         <div class="kpi-sub" id="kpi-stock-alert" style="color:var(--danger);">Cajas Selladas</div>
       </div>
       <div class="kpi-card" style="border-left: 4px solid var(--purple);">
@@ -866,7 +862,7 @@ setTimeout(function() {
       </div>
 
       <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:2px solid #ff007f; margin-bottom:16px;">
-        <h4 style="margin: 0 0 12px 0; color:#fff; font-size:13px; font-weight:900;">Productos que incluye</h4>
+        <h4 style="margin: 0 0 12px 0; color:var(--text-main); font-size:13px; font-weight:900;">Productos que incluye</h4>
         <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:flex-end;">
           <div style="flex:3; min-width:200px;"><input type="text" id="combo-prod1" class="user-input" list="lista-productos-combos" placeholder="Producto 1..." onchange="calcularCostoCombo()"></div>
           <div style="flex:1; min-width:60px;"><input type="number" id="combo-cant1" class="user-input" value="1" min="1" oninput="calcularCostoCombo()"></div>
@@ -929,7 +925,7 @@ setTimeout(function() {
       </div>
 
       <div style="background:var(--bg-input); padding:18px; border-radius:12px; border:2px solid var(--warning); margin-bottom:16px;">
-        <h4 style="margin: 0 0 12px 0; color:#fff; font-size:13px; font-weight:900; text-transform:uppercase;">🧪 Prepara la Muestra</h4>
+        <h4 style="margin: 0 0 12px 0; color:var(--text-main); font-size:13px; font-weight:900; text-transform:uppercase;">🧪 Prepara la Muestra</h4>
         
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px;">
           <div style="flex:3; min-width:240px;">
@@ -1198,7 +1194,7 @@ setTimeout(function() {
             <div style="position:relative; z-index:2; margin-bottom:16px;">
               <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
                 <span style="color:#94a3b8;">Cliente:</span>
-                <b id="tc-nombre-cliente" style="color:#fff;">Cliente General</b>
+                <b id="tc-nombre-cliente" style="color:var(--text-main);">Cliente General</b>
               </div>
               <div id="tc-box-nota" style="font-size:11px; color:#ffb703; font-weight:700; margin-bottom:10px;"></div>
 
@@ -2231,7 +2227,7 @@ function renderInventario() {
             st = `${i.stock} ML`;
             return `<tr><td>${i.marca}</td><td style="display:flex; gap:10px; align-items:center;">${imgHTML} <div>${btnImagenHtml} <b style="color:var(--warning);">${i.nombre}</b>${badge}${notasHTML}</div></td><td><b style="color:var(--warning);">${st}</b></td><td style="color:var(--text-muted);">$${Number(i.costo).toFixed(3)}/ml</td><td style="color:var(--warning); font-weight:900;">$${Number(i.precio).toFixed(2)}/ml</td><td style="color:var(--accent); font-weight:900;">Bs. ${(Number(i.precio)*tasa).toFixed(2)}/ml</td><td><button class="btn-edit" onclick="editarPerfume('${i.id}')" style="background:rgba(255,183,3,0.2); color:var(--warning); border:1px solid rgba(255,183,3,0.4);">✏️</button> <button class="btn-danger" onclick="eliminarPerfume('${i.id}')">🗑️</button></td></tr>`;
         } else {
-            return `<tr><td>${i.marca}</td><td style="display:flex; gap:10px; align-items:center;">${imgHTML} <div>${btnImagenHtml} <b style="color:#fff;">${i.nombre}</b>${notasHTML}</div></td><td>${st}</td><td style="color:var(--text-muted);">$${Number(i.costo).toFixed(2)}</td><td style="color:var(--warning); font-weight:900;">$${Number(i.precio).toFixed(2)}</td><td style="color:var(--accent); font-weight:900;">Bs. ${(Number(i.precio)*tasa).toFixed(2)}</td><td>${btnDestapar} <button class="btn-edit" onclick="editarPerfume('${i.id}')" style="background:rgba(255,183,3,0.2); color:var(--warning); border:1px solid rgba(255,183,3,0.4);">✏️</button> <button class="btn-danger" onclick="eliminarPerfume('${i.id}')">🗑️</button></td></tr>`;
+            return `<tr><td>${i.marca}</td><td style="display:flex; gap:10px; align-items:center;">${imgHTML} <div>${btnImagenHtml} <b style="color:var(--text-main);">${i.nombre}</b>${notasHTML}</div></td><td>${st}</td><td style="color:var(--text-muted);">$${Number(i.costo).toFixed(2)}</td><td style="color:var(--warning); font-weight:900;">$${Number(i.precio).toFixed(2)}</td><td style="color:var(--accent); font-weight:900;">Bs. ${(Number(i.precio)*tasa).toFixed(2)}</td><td>${btnDestapar} <button class="btn-edit" onclick="editarPerfume('${i.id}')" style="background:rgba(255,183,3,0.2); color:var(--warning); border:1px solid rgba(255,183,3,0.4);">✏️</button> <button class="btn-danger" onclick="eliminarPerfume('${i.id}')">🗑️</button></td></tr>`;
         }
       }).join('');
   } catch(e) {}
@@ -2243,7 +2239,7 @@ function renderHistorialesVentas() {
         if(!v) return '';
         const pend = Math.max(0, Number(v.total) - Number(v.abonado)); 
         let prodHTML = v.productoResumen || 'Producto';
-        const tdTotal = `<b style="color:#fff;">$${Number(v.total).toFixed(2)}</b>`;
+        const tdTotal = `<b style="color:var(--text-main);">$${Number(v.total).toFixed(2)}</b>`;
         const tdAbono = `<span style="color:var(--success);">$${Number(v.abonado).toFixed(2)}</span>`;
         const tdPend = `<span style="color:var(--danger);">$${pend.toFixed(2)}</span>`;
         let btnAbonar = pend > 0.01 ? `<button onclick="abrirModalAbono('${v.id}')" class="btn-warning" style="padding:4px 8px; font-size:10px; margin-right:4px;">+ Abono</button>` : '';
