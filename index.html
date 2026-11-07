@@ -37,9 +37,94 @@
     --success: #06d6a0; 
     --info: #3a86ff; 
     --purple: #9d4edd; 
+    --card-shadow: 0 8px 30px rgba(0,0,0,0.5);
   }
-  
-  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  [data-theme="light"] {
+    --bg-main: #f4fbfb; 
+    --bg-card: #ffffff; 
+    --bg-input: #f0fafa; 
+    --border-color: #cceeee; 
+    --accent: #0d9488; 
+    --accent-hover: #14b8a6; 
+    --text-main: #0f2329; 
+    --text-muted: #527982; 
+    --danger: #ef4444; 
+    --warning: #f59e0b; 
+    --success: #0d9488; 
+    --info: #0284c7; 
+    --purple: #8b5cf6; 
+    --card-shadow: 0 10px 30px rgba(13,148,136,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  /* Ajustes visuales para modo claro */
+  [data-theme="light"] th {
+    background: #e6f7f7 !important;
+    color: #0d9488 !important;
+    border-bottom: 2px solid #cceeee !important;
+  }
+  [data-theme="light"] .cat-hero {
+    background: radial-gradient(circle, #e6f7f7 0%, #f4fbfb 100%) !important;
+  }
+  [data-theme="light"] .cat-title-text {
+    color: #0f2329 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .cat-item {
+    background: #ffffff !important;
+    border-color: #cceeee !important;
+    box-shadow: 0 8px 24px rgba(13,148,136,0.08) !important;
+  }
+  [data-theme="light"] .cat-item-name {
+    color: #0f2329 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .cat-item-price {
+    color: #0f2329 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .cat-cart-bar {
+    background: rgba(255,255,255,0.96) !important;
+    border-top: 2px solid #0d9488 !important;
+    box-shadow: 0 -8px 30px rgba(13,148,136,0.12) !important;
+  }
+  [data-theme="light"] .cat-cart-total {
+    color: #0f2329 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .carrito-caja {
+    background: #f0fafa !important;
+    border-color: #cceeee !important;
+  }
+  [data-theme="light"] #reloj-sistema {
+    background: rgba(13,148,136,0.1) !important;
+    border-color: rgba(13,148,136,0.3) !important;
+    color: #0d9488 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .tasa-box {
+    background: #ffffff !important;
+    border-color: #cceeee !important;
+  }
+  [data-theme="light"] .tasa-input {
+    color: #0f2329 !important;
+    text-shadow: none !important;
+  }
+  [data-theme="light"] .logo-3d-circle {
+    background: radial-gradient(circle at 30% 30%, #ffffff, #e6f7f7 85%) !important;
+    box-shadow: 0 8px 20px rgba(13,148,136,0.2) !important;
+  }
+  [data-theme="light"] .tab-btn {
+    background: #ffffff !important;
+    border-color: #cceeee !important;
+    color: #527982 !important;
+  }
+  [data-theme="light"] .tab-btn.active {
+    background: rgba(13,148,136,0.12) !important;
+    border-color: #0d9488 !important;
+    color: #0d9488 !important;
+  }
+
   body { margin: 0; padding: 16px; background: var(--bg-main); color: var(--text-main); font-size: 13px; }
   
   #version-badge-flotante {
@@ -352,6 +437,7 @@ setTimeout(function() {
         </div>
         <h1 class="cat-title-text">PERFUMA2</h1>
         <div id="cat-tasa-display" class="cat-tasa-badge">Cargando Tasa...</div>
+        <div style="margin-top:10px;"><button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:11px; font-weight:900; border-radius:20px; padding:6px 14px;">🌙 Modo Noche</button></div>
     </div>
     
     <div class="cat-search-container">
@@ -414,6 +500,7 @@ setTimeout(function() {
     <div class="header-controls">
       <div id="reloj-sistema" style="font-size: 13px; color: var(--accent); font-weight: 900; margin-right: 10px; background: rgba(0,242,214,0.1); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,242,214,0.3); text-shadow: 0 0 8px rgba(0,242,214,0.4);"></div>
       
+      <button class="btn-secondary btn-theme-toggle" onclick="alternarTemaLuz()" style="font-size:12px; font-weight:900; border-radius:20px; padding:7px 14px;" title="Cambiar tema">🌙 Modo Noche</button>
       <button class="btn-primary" onclick="solicitarPermisoNotificaciones()" style="background:var(--purple); color:#fff; font-size:11px;" title="Activa notificaciones push">🔔 Activar Alertas Push</button>
       
       <div class="tasa-box activa" id="box-tasa-bcv" onclick="alternarTipoTasa('bcv')">
@@ -3733,7 +3820,47 @@ function eliminarRespaldoNubeIndividual(keyBk) {
 }
 
 
-window.onload = function() { verificarBloqueoSeguridad(); try { inicializarConfigMetodosPagoUI(); } catch(e){} };
+
+// ============================================================================
+// CONMUTADOR DE TEMA DÍA (☀️ SOL) Y NOCHE (🌙 LUNA)
+// ============================================================================
+function alternarTemaLuz() {
+    const htmlEl = document.documentElement;
+    const actual = htmlEl.getAttribute('data-theme') || 'dark';
+    const nuevo = actual === 'light' ? 'dark' : 'light';
+    aplicarTemaVisual(nuevo);
+    localStorage.setItem('p2_theme_mode', nuevo);
+    reproducirSonido('click');
+}
+
+function aplicarTemaVisual(tema) {
+    const htmlEl = document.documentElement;
+    htmlEl.setAttribute('data-theme', tema);
+    const btns = document.querySelectorAll('.btn-theme-toggle');
+    btns.forEach(btn => {
+        if (tema === 'light') {
+            btn.innerHTML = '☀️ Modo Día';
+            btn.title = 'Cambiar a Modo Noche (Luna)';
+            btn.style.borderColor = '#0d9488';
+            btn.style.color = '#0d9488';
+            btn.style.background = '#ffffff';
+        } else {
+            btn.innerHTML = '🌙 Modo Noche';
+            btn.title = 'Cambiar a Modo Día (Sol)';
+            btn.style.borderColor = '#00f2d6';
+            btn.style.color = '#00f2d6';
+            btn.style.background = 'rgba(0, 242, 214, 0.1)';
+        }
+    });
+}
+
+function inicializarTemaVisual() {
+    const guardado = localStorage.getItem('p2_theme_mode') || 'dark';
+    aplicarTemaVisual(guardado);
+}
+
+
+window.onload = function() { inicializarTemaVisual(); verificarBloqueoSeguridad(); try { inicializarConfigMetodosPagoUI(); } catch(e){} };
 
 // Registro de Service Worker para habilitar botón de instalación nativa PWA
 if ('serviceWorker' in navigator) {
